@@ -11,7 +11,7 @@ params.results_dir = ""
 params.prokka_image = ""
 params.threads = 1
 params.metadata = ""
-
+params.model = "GTR+G"
 
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
 
@@ -126,6 +126,31 @@ process augur_filter_sequences {
         --metadata ${metadata} \
         --exclude invalid_strains.txt \
         --output-sequences valid_sequences.fasta
+    """
+}
+
+process prepare_SNPs_alignment {
+    container  = params.main_image
+    tag "Preparing SNPs alignment"
+    cpus params.threads
+    memory "50 GB"
+    time "2h"
+
+    input:
+    tuple path(fasta), path(embl), path(metadata)
+    output:
+    tuple path("alignment_SNPs.fasta"), path("partition.txt"), path(metadata)
+
+    script:
+    """
+    # --max_gap exxlude from the analysis genes for which at least one sample missing more than 30% of sequence
+    python /opt/docker/custom_scripts/prep_SNPs_alignment_and_partition.py --input_fasta ${fasta} \
+                                                                           --input_fasta_annotation ${embl} \
+                                                                           --model ${params.model} \
+                                                                           --output_fasta alignment_SNPs.fasta \
+                                                                           --output_partition partition.txt \
+                                                                           --cpus ${task.cpus} \
+                                                                           --max_gap 30
 
     """
 }
@@ -179,6 +204,7 @@ augur_index_sequences_out = augur_index_sequences(roary_out)
 
 augur_filter_sequences_out = augur_filter_sequences(augur_index_sequences_out, metadata_channel)
 
+prepare_SNPs_alignment_and_partition_out = prepare_SNPs_alignment(augur_filter_sequences_out)
 // save_input_to_log(gff_input)
 
 }
