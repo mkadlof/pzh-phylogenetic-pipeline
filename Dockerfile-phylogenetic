@@ -1,0 +1,47 @@
+FROM ubuntu:24.04
+
+LABEL maintainer="Michal Lazniewski <mlazniewski@pzh.gov.pl>"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
+RUN apt update && apt install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt update && apt upgrade -y && \
+    apt install -y \
+    build-essential pkgconf \
+    python3.11 python3.11-distutils \
+    curl unzip wget vim bc htop git gcc \
+    zlib1g-dev libbz2-dev libcurl4-gnutls-dev libssl-dev liblzma-dev \
+    python3-pycurl screen mash seqtk roary bison flex default-jre cmake
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 && \
+    ln -s /usr/local/bin/pip /usr/bin/pip3
+
+RUN pip install ete3 nextstrain-augur click 
+
+WORKDIR /usr/bin
+RUN ln -s python3 python
+
+RUN mkdir -p /opt/docker
+WORKDIR /opt/docker
+
+# RaXML (fixed version to lataest commit available on 05.04.2025)
+RUN git clone --recursive https://github.com/amkozlov/raxml-ng  ;\
+    cd raxml-ng ;\
+    git checkout 805318cef87bd5d67064efa299b5d1cf948367fd ;\
+    mkdir build && cd build ;\
+    cmake .. ;\
+    make -j 4 && make install ;\
+    cd /opt/docker
+
+# IQtree2 v 2.4
+RUN wget https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-Linux-intel.tar.gz ;\
+    tar -zxf iqtree-2.4.0-Linux-intel.tar.gz ;\
+    cp iqtree-2.4.0-Linux-intel/bin/* /usr/bin 
+
+# Custom scripts
+RUN mkdir -p /opt/docker/custom_scripts
+COPY src/* /opt/docker/custom_scripts
+CMD ["/bin/bash"]
