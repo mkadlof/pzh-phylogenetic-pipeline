@@ -3,8 +3,8 @@ process find_identical_sequences {
     path fasta
 
     output:
-    path "valid_strains_unique.fasta", emit: out
-    path "valid_strains_ident_seq.csv", emit: ids
+    path "valid_strains_unique.fasta", emit: uniq_fasta
+    path "valid_strains_ident_seq.csv", emit: duplicated_ids
 
     script:
     """

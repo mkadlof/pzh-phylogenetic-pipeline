@@ -3,7 +3,7 @@ process augur_index_sequences {
     path fasta
 
     output:
-    path "sequence-index.csv", emit: out
+    path "sequence-index.csv", emit: sequence_index
 
     script:
     """

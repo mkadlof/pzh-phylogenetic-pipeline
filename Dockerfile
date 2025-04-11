@@ -7,13 +7,12 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 RUN apt update -y && apt install --no-install-recommends -y \
     python3 \
-    python3-venv
+    python3-venv \
+    mafft
 
 RUN python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install nextstrain-augur
-
-RUN apt install --no-install-recommends -y \
-    mafft
+RUN pip install nextstrain-augur \
+        Biopython

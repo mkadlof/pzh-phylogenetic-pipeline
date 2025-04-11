@@ -8,6 +8,7 @@ include { identify_low_quality_sequences } from './modules/identify_low_quality_
 include { augur_filter_sequences } from './modules/augur_filter_sequences.nf'
 include { find_identical_sequences } from './modules/find_identical_sequences.nf'
 include { augur_align } from './modules/augur_align.nf'
+include { remove_duplicates_from_alignment } from './modules/remove_duplicates_from_alignment.nf'
 
 workflow {
     augur_index_sequences(input_fasta)
@@ -15,27 +16,11 @@ workflow {
     augur_filter_sequences(input_fasta, augur_index_sequences.out, metadata, identify_low_quality_sequences.out)
     find_identical_sequences(augur_filter_sequences.out)
     augur_align(augur_filter_sequences.out)
-//     align_no_dups(find_identical_sequences.out, params.output_dir)
+    remove_duplicates_from_alignment(augur_align.out, find_identical_sequences.out.duplicated_ids)
 //     build_tree(align_no_dups.out, params.metadata, params.output_dir)
 //     insert_duplicates(build_tree.out, find_identical_sequences.ids, params.output_dir)
 }
 
-
-//
-// process align_with_dups {
-//     input:
-//     path fasta
-//     path outdir
-//
-//     output:
-//     path "${outdir}/tree_dups.fasta", emit: out
-//
-//     script:
-//     """
-//     augur align --sequences ${fasta} --output ${outdir}/tree_dups.fasta
-//     """
-// }
-//
 // process build_tree {
 //     input:
 //     path aln
@@ -54,8 +39,6 @@ workflow {
 //         -con \
 //         -minsup 0.75 \
 //         -redo \
-//         --dating LSD \
-//         --date ${metadata}
 //     """
 // }
 //
@@ -74,16 +57,4 @@ workflow {
 //         --tree ${tree} \
 //         --ids ${ids} > ${outdir}/consensus_tree.nwk
 //     """
-// }
-//
-// nextflow.config
-//
-// params.i = null
-// params.m = null
-// params.o = "results"
-//
-// process {
-//     withLabel: 'local' {
-//         executor = 'local'
-//     }
 // }
