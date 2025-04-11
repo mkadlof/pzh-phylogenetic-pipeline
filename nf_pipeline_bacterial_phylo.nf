@@ -107,7 +107,8 @@ process augur_filter_sequences {
     tuple path(fasta), path(embl), path(index)
     path(metadata)
     output:
-    tuple path("valid_sequences.fasta"), path(embl), path(metadata)
+    tuple path("valid_sequences.fasta"), path(embl), emit: to_SNPs_alignment
+    path(metadata), emit: model_only
 
     script:
     """
@@ -137,9 +138,9 @@ process prepare_SNPs_alignment {
     time "2h"
 
     input:
-    tuple path(fasta), path(embl), path(metadata)
+    tuple path(fasta), path(embl)
     output:
-    tuple path("alignment_SNPs.fasta"), path("partition.txt"), path(metadata)
+    tuple path("alignment_SNPs.fasta"), path("partition.txt")
 
     script:
     """
@@ -153,6 +154,25 @@ process prepare_SNPs_alignment {
                                                                            --max_gap 30
 
     """
+}
+
+process identify_identical_seqences {
+    container  = params.main_image
+    tag "Preparing SNPs alignment"
+    cpus params.threads
+    memory "50 GB"
+    time "2h"
+
+    input:
+    tuple path(fasta), path(partition)
+    output:
+    tuple path("alignment_SNPs_unique.fasta"), path(partition),  emit: to_raxml
+    path("alignment_SNPs_ident_seq.csv"), emit: identical_sequences_mapping 
+    script:
+    """
+    python /opt/docker/custom_scripts/find_identical_seqences.py -i ${fasta} -o .
+    """
+
 }
 
 process save_input_to_log {
@@ -204,7 +224,9 @@ augur_index_sequences_out = augur_index_sequences(roary_out)
 
 augur_filter_sequences_out = augur_filter_sequences(augur_index_sequences_out, metadata_channel)
 
-prepare_SNPs_alignment_and_partition_out = prepare_SNPs_alignment(augur_filter_sequences_out)
+prepare_SNPs_alignment_and_partition_out = prepare_SNPs_alignment(augur_filter_sequences_out.to_SNPs_alignment)
+
+identify_identical_seqences_out = identify_identical_seqences(prepare_SNPs_alignment_and_partition_out)
 // save_input_to_log(gff_input)
 
 }
