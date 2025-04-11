@@ -12,6 +12,8 @@ params.prokka_image = ""
 params.threads = 1
 params.metadata = ""
 params.model = "GTR+G"
+params.starting_trees = 10
+params.bootsrap = 200
 
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
 
@@ -175,6 +177,35 @@ process identify_identical_seqences {
 
 }
 
+process run_raxml {
+    container  = params.main_image
+    tag "Calculating SNPs tree"
+    cpus { params.threads > 20 ? 20 : params.threads }
+    memory "50 GB"
+    time "5h"
+    input:
+    tuple path(fasta), path(partition)
+    output:
+    path("tree.bestTree"), emit: trees
+    script:
+    def ntrees = params.starting_trees
+    def nboots = params.bootsrap
+
+    """
+    raxml-ng --all \\
+             --msa ${fasta} \\
+             --precision 4 \\
+             --threads ${task.cpus} \\
+             --model ${partition} \\
+             --site-repeats on \\
+             --tree pars{${ntrees}} \\
+             --bs-trees ${nboots} \\
+             --prefix tree \\
+             --force \\
+             --brlen scaled
+    """  
+}
+
 process save_input_to_log {
   tag "Dummy process"
   cpus 1
@@ -227,6 +258,8 @@ augur_filter_sequences_out = augur_filter_sequences(augur_index_sequences_out, m
 prepare_SNPs_alignment_and_partition_out = prepare_SNPs_alignment(augur_filter_sequences_out.to_SNPs_alignment)
 
 identify_identical_seqences_out = identify_identical_seqences(prepare_SNPs_alignment_and_partition_out)
+
+run_raxml_out = run_raxml(identify_identical_seqences_out.to_raxml)
 // save_input_to_log(gff_input)
 
 }
