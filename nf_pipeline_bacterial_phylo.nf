@@ -113,10 +113,10 @@ process augur_filter_sequences {
     """
     # For NOW we are liberal when it comes to sequences quality
     # the script only checks columns 5 and 6 in $index i.e. Ns and abigous
-    python /opt/docker/custom_scripts/filter_low_quality_sequences.py --output_dir . \
-                                                                      --threshold_Ns ${params.threshold_Ns} \
-                                                                      --threshold_ambiguities ${params.threshold_ambiguities} \
-                                                                      $index
+    python /opt/docker/custom_scripts/identify_low_quality_sequences.py --output_dir . \
+                                                                        --threshold_Ns ${params.threshold_Ns} \
+                                                                        --threshold_ambiguities ${params.threshold_ambiguities} \
+                                                                        $index
     
     # For now we use augur filter to preprare fasta file without invalid_strains.txt prepared with filter_low_quality_sequences script 
     # Other usefull options --min-length --max-length  --group-by which we do not use for now
