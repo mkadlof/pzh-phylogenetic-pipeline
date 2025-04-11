@@ -3,6 +3,12 @@ data/
 results
 NOTES.md
 
+# NEXTFLOW
+.nextflow/
+.nextflow.log.*
+work/
+report.html
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
