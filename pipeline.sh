@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xeuo pipefail
+set -eo pipefail
 
 # set -e – przerywa wykonanie skryptu przy pierwszym błędzie.
 # set -u – traktuje niezdefiniowane zmienne jako błąd.
@@ -64,24 +64,40 @@ python3 src/find_identical_seqences.py \
                 --input "${OUTPUT_DIR}/valid_strains.fasta" \
                 --output_dir "${OUTPUT_DIR}"
 
+# TODO: robię dwa alignmenty, jeden da danych deduplikowanych, a drugi
+# TODO: dla danych w których, są zduplikowane sekwencje
+# TODO: Trzeba poprawić, żeby nie powtarzać maffta.
 # Make alignment
 augur align \
       --sequences "${OUTPUT_DIR}/valid_strains_unique.fasta" \
       --output "${OUTPUT_DIR}/tree.fasta"
+augur align \
+      --sequences "${OUTPUT_DIR}/valid_strains.fasta" \
+      --output "${OUTPUT_DIR}/tree_dups.fasta"
 
-iqtree2 -nt AUTO -s results/tree.fasta -m GTR+G -B 1000 -con -minsup 0.75
+# Build tree
+iqtree2 -nt AUTO -s results/tree.fasta -m GTR+G -B 1000 -con -minsup 0.75 -redo
 
 # Add missing duplicates
-src/insert_missing_dupliated_sequences.py \
-      --tree results/tree.fasta.contree \
-      --ids results/valid_strains_ident_seq.csv > ${OUTPUT_DIR}/consensus_tree.nwk
+python src/insert_missing_dupliated_sequences.py \
+        --tree results/tree.fasta.contree \
+        --ids results/valid_strains_ident_seq.csv > ${OUTPUT_DIR}/consensus_tree.nwk
 
-#
-## Refine tree - currently only for asaignment internal node names
+## Refine tree - currently only for assignment internal node names
 #augur refine \
-#      --tree "${OUTPUT_DIR}/tree.nwk" \
-#      --output-tree "${OUTPUT_DIR}/refined-tree.nwk" \
-#
+#      --tree "${OUTPUT_DIR}/consensus_tree.nwk" \
+#      --output-tree "${OUTPUT_DIR}/refined_consensus_tree.nwk" \
+#      --alignment "${OUTPUT_DIR}/tree_dups.fasta" \
+#      --metadata "${METADATA}" \
+#      --timetree
+
+treetime --tree ${OUTPUT_DIR}/consensus_tree.nwk \
+          --dates ${METADATA} \
+          --aln ${OUTPUT_DIR}/tree_dups.fasta \
+          --time-marginal never \
+          --keep-polytomies \
+          --outdir ${OUTPUT_DIR}
+
 ## Infer ancestral sequences
 #augur ancestral \
 #    --tree "${OUTPUT_DIR}/refined-tree.nwk" \
