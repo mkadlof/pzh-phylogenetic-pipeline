@@ -76,12 +76,31 @@ augur align \
       --output "${OUTPUT_DIR}/tree_dups.fasta"
 
 # Build tree
-iqtree2 -nt AUTO -s results/tree.fasta -m GTR+G -B 1000 -con -minsup 0.75 -redo
+iqtree2 -nt AUTO \
+        -s results/tree.fasta \
+        -m GTR+G \
+        -B 1000 \
+        -con \
+        -minsup 0.75 \
+        -redo \
+        --dating LSD \
+        --date "${METADATA}"
 
 # Add missing duplicates
 python src/insert_missing_dupliated_sequences.py \
         --tree results/tree.fasta.contree \
         --ids results/valid_strains_ident_seq.csv > ${OUTPUT_DIR}/consensus_tree.nwk
+
+## Build tree
+#iqtree2 -nt AUTO \
+#        -s results/tree.fasta \
+#        -m GTR+G \
+#        -B 1000 \
+#        -con \
+#        -minsup 0.75 \
+#        -redo \
+#        --dating LSD \
+#        --date "${METADATA}"
 
 ## Refine tree - currently only for assignment internal node names
 #augur refine \
@@ -91,12 +110,12 @@ python src/insert_missing_dupliated_sequences.py \
 #      --metadata "${METADATA}" \
 #      --timetree
 
-treetime --tree ${OUTPUT_DIR}/consensus_tree.nwk \
-          --dates ${METADATA} \
-          --aln ${OUTPUT_DIR}/tree_dups.fasta \
-          --time-marginal never \
-          --keep-polytomies \
-          --outdir ${OUTPUT_DIR}
+#treetime --tree ${OUTPUT_DIR}/consensus_tree.nwk \
+#          --dates ${METADATA} \
+#          --aln ${OUTPUT_DIR}/tree_dups.fasta \
+#          --time-marginal never \
+#          --keep-polytomies \
+#          --outdir ${OUTPUT_DIR}
 
 ## Infer ancestral sequences
 #augur ancestral \
