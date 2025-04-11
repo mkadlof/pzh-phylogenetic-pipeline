@@ -69,6 +69,26 @@ process run_roary {
   """
 }
 
+process augur_index_sequences {
+    container  = params.main_image
+    tag "Indexing sequences with augur"
+    cpus 1
+    memory "30 GB"
+    time "1h"
+    
+    input:
+    tuple path(fasta), path(embl)
+
+    output:
+    tuple path(fasta), path(embl), path("index.csv")
+
+    script:
+    """
+    augur index --sequences ${fasta} --output index.csv
+    """
+}
+
+
 process save_input_to_log {
   tag "Dummy process"
   cpus 1
@@ -110,6 +130,7 @@ if (params.input_type == 'fasta') {
 }
 
 roary_out = run_roary(gff_input)
+augur_index_sequences_out = augur_index_sequences(roary_out)
 // save_input_to_log(gff_input)
 
 }
