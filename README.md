@@ -9,4 +9,5 @@ Another project related to PleEpiSeq is [Sequnecing pipline](https://github.com/
 
 To execute bacterial pipeline type
 
-nextflow run nf_pipeline_bacterial_phylo.nf --input_dir /path/to/directory/with/fastas --input_type fasta --results_dir results --threads 20  --main_image pzh_pipeline_phylogenetic --prokka_image staphb/prokka -profile slurm -with-trace -resume
+nextflow run nf_pipeline_bacterial_phylo.nf --input_dir fastas --input_type fasta --results_dir results --prokka_image staphb/prokka --main_image pzh_pipeline_phylogenetic --threads 30 --metadata /path/to/metadata.txt -profile slurm  -with-trace -resume --threads 30
+
