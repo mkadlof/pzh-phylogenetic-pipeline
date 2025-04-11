@@ -5,4 +5,8 @@ nextflow run nf_viral_phylogenetic_pipeline.nf \
              --metadata data/metadata.tsv \
              -with-dag nf_viral_phylogenetic_pipeline.png \
              -with-trace trace.tsv \
-             -with-report report.html
+             -with-report report.html \
+             -resume
+
+# Remove logs from previous runs
+rm \.nextflow.log\.*
