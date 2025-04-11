@@ -24,7 +24,7 @@ def write_strains(strains: List[Dict[str, str]], output):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Filter low quality sequences')
+    parser = argparse.ArgumentParser(description='Identify low quality sequences')
     parser.add_argument('input', type=str, help='Input CSV augur index file')
     parser.add_argument('--output_dir', default="results", type=str, help='Output file with valid strains')
     parser.add_argument('--threshold_Ns', default=0.02, type=float, help='Threshold for Ns validation')
