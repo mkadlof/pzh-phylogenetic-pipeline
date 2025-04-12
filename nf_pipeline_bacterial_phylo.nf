@@ -111,7 +111,7 @@ process augur_filter_sequences {
     path(metadata)
     output:
     tuple path("valid_sequences.fasta"), path(embl), emit: to_SNPs_alignment
-    path(metadata), emit: model_only
+    tuple path("valid_sequences.fasta"), path(metadata), emit: alignment_and_metadata
 
     script:
     """
@@ -232,19 +232,39 @@ process restore_identical_sequences {
     
 }
 
-
-// augur refine \
-//  --tree results/tree_raw.nwk \
-//  --alignment results/aligned.fasta \
-//  --metadata data/metadata.tsv \
-//  --output-tree results/tree.nwk \
-//  --output-node-data results/branch_lengths.json \
-//  --timetree \
-//  --coalescent opt \
-//  --date-confidence \
-//  --date-inference marginal \
-//  --clock-filter-iqd 4
-
+process add_temporal_data {
+    // adjust branch lengths in tree to position tips by their sample date and infer the most likely time of their ancestors
+    // augur refine seems to be a wrapper around treetime
+    // Be awere that poor data with poor temporal signal might result in an incorrect tree
+    container  = params.main_image
+    tag "Adding temporal data to tree"
+    cpus 1
+    memory "20 GB"
+    time "5h"
+    input:
+    path(tree)
+    tuple path(alignment), path(metadata)// SNPs alignment would confuse timetree when estimating clock we are using initial full alignment
+    output:
+    path("tree3_timetree.nwk")
+    script:
+    """
+    augur refine --tree ${tree} \\
+                 --alignment ${alignment} \\
+                 --metadata ${metadata} \\
+                 --output-tree tree3_timetree.nwk \\
+                 --output-node-data branch_lengths.json \\
+                 --timetree \\
+                 --coalescent opt \\
+                 --date-confidence \\
+                 --date-inference marginal \\
+                 --clock-filter-iqd 4 \\
+                 --precision 3 \\
+                 --stochastic-resolve \\
+                 --root  least-squares \\
+                 --max-iter 10 
+                
+    """
+}
 
 process save_input_to_log {
   tag "Dummy process"
@@ -303,6 +323,7 @@ run_raxml_out = run_raxml(identify_identical_seqences_out.to_raxml)
 
 restore_identical_sequences_out = restore_identical_sequences(run_raxml_out.tree, identify_identical_seqences_out.identical_sequences_mapping)
 
+add_temporal_data_out = add_temporal_data(restore_identical_sequences_out.tree, augur_filter_sequences_out.alignment_and_metadata)
 // save_input_to_log(gff_input)
 
 }
