@@ -9,11 +9,12 @@ params.input_type = ""
 params.main_image = "" 
 params.results_dir = ""
 params.prokka_image = ""
-params.threads = 1
-params.metadata = ""
-params.model = "GTR+G"
-params.starting_trees = 10
-params.bootsrap = 200
+params.threads = 1 
+params.metadata = "" // Path to a file with metadata
+params.model = "GTR+G" // Model for raxml
+params.starting_trees = 10 // Number of random initial trees
+params.bootsrap = 200 // Number of bootstraps
+params.min_support = 70 // Minimum support for a branch to keep it in a tree
 
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
 
@@ -180,13 +181,13 @@ process identify_identical_seqences {
 process run_raxml {
     container  = params.main_image
     tag "Calculating SNPs tree"
-    cpus { params.threads > 20 ? 20 : params.threads }
+    cpus { params.threads > 30 ? 30 : params.threads }
     memory "50 GB"
-    time "5h"
+    time "8h"
     input:
     tuple path(fasta), path(partition)
     output:
-    path("tree.bestTree"), emit: trees
+    path("tree.raxml.support"), emit: tree
     script:
     def ntrees = params.starting_trees
     def nboots = params.bootsrap
@@ -205,6 +206,45 @@ process run_raxml {
              --brlen scaled
     """  
 }
+
+process restore_identical_sequences {
+    // Reroot initial tree, collapse poorly supported nodes
+    // Reintroduce identical sequences that were removed prior to tree calculation
+    container  = params.main_image
+    tag "Refining initial tree"
+    cpus 1
+    memory "10 GB"
+    time "10m"
+    input:
+    path(tree)
+    path(identical_sequences_mapping) 
+    output:
+    path("tree2_reintroduced_identical_sequences.nwk"), emit: tree
+    script:
+    """
+    python /opt/docker/custom_scripts/root_collapse_and_add_identical_seq_to_tree.py --input_mapping ${identical_sequences_mapping} \\
+                                                                                     --input_tree ${tree} \\
+                                                                                     --collapse_value ${params.min_support} \\
+                                                                                     --root \\
+                                                                                     --collapse \\
+                                                                                     --output_prefix tree2
+    """
+    
+}
+
+
+// augur refine \
+//  --tree results/tree_raw.nwk \
+//  --alignment results/aligned.fasta \
+//  --metadata data/metadata.tsv \
+//  --output-tree results/tree.nwk \
+//  --output-node-data results/branch_lengths.json \
+//  --timetree \
+//  --coalescent opt \
+//  --date-confidence \
+//  --date-inference marginal \
+//  --clock-filter-iqd 4
+
 
 process save_input_to_log {
   tag "Dummy process"
@@ -260,6 +300,9 @@ prepare_SNPs_alignment_and_partition_out = prepare_SNPs_alignment(augur_filter_s
 identify_identical_seqences_out = identify_identical_seqences(prepare_SNPs_alignment_and_partition_out)
 
 run_raxml_out = run_raxml(identify_identical_seqences_out.to_raxml)
+
+restore_identical_sequences_out = restore_identical_sequences(run_raxml_out.tree, identify_identical_seqences_out.identical_sequences_mapping)
+
 // save_input_to_log(gff_input)
 
 }
