@@ -18,7 +18,7 @@ params.min_support = 70 // Minimum support for a branch to keep it in a tree
 params.species = "" // We will supplement pipeline with clock rates for relevant species so we need that info
 params.clockrate = ""
 params.gen_per_year = ""
-
+params.auspice_config = "" // Auspice input json
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
 
 if ( !workflow.profile || ( workflow.profile != "slurm" && workflow.profile != "local") ) {
@@ -319,6 +319,52 @@ process find_country_coordinates {
 
 }
 
+process generate_colors_for_features {
+    container  = params.main_image
+    tag "Preparaing colors for analyzed data"
+    cpus 1
+    memory "20 GB"
+    time "2h"
+    input:
+    path("longlang.txt")
+    output:
+    tuple path("longlang.txt"), path("color_data.txt")
+    script:
+    """
+    cat longlang.txt | cut -f1,2 >> tmp.txt
+    python /opt/docker/custom_scripts/generate_colors_for_feature.py  --input_file tmp.txt \
+                                                                      --output_file color_data.txt 
+    """
+
+}
+process visualize_tree {
+    container  = params.main_image
+    tag "Visualizing the data"
+    cpus 1
+    memory "20 GB"
+    time "2h"
+    input:
+    tuple path(tree), path(branch_lengths), path(traits)
+    tuple path(longlat), path(colors)
+    path(metadata)
+    path(auspice)
+    output:
+    path("auspice.json")
+    script:
+    """
+
+    augur export v2 --tree ${tree} \
+            --metadata ${metadata} \
+            --node-data ${branch_lengths} ${traits} \
+            --auspice-config ${auspice} \
+            --colors ${colors} \
+            --lat-longs ${longlat} \
+            --output auspice.json \
+            """
+
+}
+
+
 process save_input_to_log {
   tag "Dummy process"
   cpus 1
@@ -340,6 +386,10 @@ workflow {
 Channel
     .fromPath("${params.metadata}")
     .set {metadata_channel}
+
+Channel
+    .fromPath("${params.auspice_config}")
+    .set {ausipice_json}
 
 // Prepare gff input
 
@@ -365,6 +415,7 @@ if (params.input_type == 'fasta') {
 roary_out = run_roary(gff_input)
 
 find_country_coordinates_out = find_country_coordinates(metadata_channel)
+generate_colors_for_features_out = generate_colors_for_features(find_country_coordinates_out)
 
 augur_index_sequences_out = augur_index_sequences(roary_out)
 
@@ -379,6 +430,7 @@ run_raxml_out = run_raxml(identify_identical_seqences_out.to_raxml)
 restore_identical_sequences_out = restore_identical_sequences(run_raxml_out.tree, identify_identical_seqences_out.identical_sequences_mapping)
 
 add_temporal_data_out = add_temporal_data(restore_identical_sequences_out.tree, augur_filter_sequences_out.alignment_and_metadata)
+visualize_tree_out = visualize_tree(add_temporal_data_out, generate_colors_for_features_out, metadata_channel, ausipice_json)
 // save_input_to_log(gff_input)
 
 }
