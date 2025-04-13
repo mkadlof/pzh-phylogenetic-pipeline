@@ -15,7 +15,7 @@ SRR10032843_prokka	2019-01-01	North America	Minnesota	USA
 SRR10049737_prokka	2019-01-01	North America	Minnesota	USA
 SRR10084881_prokka	2019-01-01	North America	Minnesota	USA
 SRR10084868_prokka	2019-01-01	North America	Minnesota	USA
-SRR10222053_prokka	2019-9-01	Europe	Ohio	USA	
+SRR10222053_prokka	2019-9-01	Europe	Ohio	USA
 SRR10235805_prokka	2019-9-01	Europe	Ohio	USA
 SRR10236686_prokka	2019-9-01	Europe	Ohio	USA
 SRR10314911_prokka	2019-10-01	Europe	Ohio	USA

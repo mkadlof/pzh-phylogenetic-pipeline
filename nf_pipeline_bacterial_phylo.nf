@@ -15,6 +15,9 @@ params.model = "GTR+G" // Model for raxml
 params.starting_trees = 10 // Number of random initial trees
 params.bootsrap = 200 // Number of bootstraps
 params.min_support = 70 // Minimum support for a branch to keep it in a tree
+params.species = "" // We will supplement pipeline with clock rates for relevant species so we need that info
+params.clockrate = ""
+params.gen_per_year = ""
 
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
 
@@ -245,25 +248,75 @@ process add_temporal_data {
     path(tree)
     tuple path(alignment), path(metadata)// SNPs alignment would confuse timetree when estimating clock we are using initial full alignment
     output:
-    path("tree3_timetree.nwk")
+    tuple path("tree3_timetree.nwk"), path("branch_lengths.json"), path("traits.json")
     script:
     """
-    augur refine --tree ${tree} \\
-                 --alignment ${alignment} \\
-                 --metadata ${metadata} \\
-                 --output-tree tree3_timetree.nwk \\
-                 --output-node-data branch_lengths.json \\
-                 --timetree \\
-                 --coalescent opt \\
-                 --date-confidence \\
-                 --date-inference marginal \\
-                 --clock-filter-iqd 4 \\
-                 --precision 3 \\
-                 --stochastic-resolve \\
-                 --root  least-squares \\
-                 --max-iter 10 
+   
+    # Estimate clock rate if correlation is poor use predefined values for a species ...
+    cat $metadata | tr "\\t" "," >> metadata.csv
+    /usr/local/bin/treetime clock --tree $tree --aln $alignment --dates metadata.csv >> log 2>&1
+    CORRELATION=`cat log  | grep "r^2" | awk '{print \$2}'`
+    if awk "BEGIN {if (\${CORRELATION} < 0.5) exit 0; else exit 1}"; then
+      augur refine --tree ${tree} \\
+                   --alignment ${alignment} \\
+                   --metadata ${metadata} \\
+                   --output-tree tree3_timetree.nwk \\
+                   --output-node-data branch_lengths.json \\
+                   --timetree \\
+                   --coalescent opt \\
+                   --date-confidence \\
+                   --date-inference marginal \\
+                   --precision 3 \\
+                   --max-iter 10  \\
+                   --gen-per-year 250 \\
+                   --keep-polytomies \\
+                   --clock-rate 1e-5
+
+# --clock-filter-iqd 4 we want to keep al nodes for now
+    else
+       augur refine --tree ${tree} \\
+                   --alignment ${alignment} \\
+                   --metadata ${metadata} \\
+                   --output-tree tree3_timetree.nwk \\
+                   --output-node-data branch_lengths.json \\
+                   --timetree \\
+                   --coalescent opt \\
+                   --date-confidence \\
+                   --date-inference marginal \\
+                   --precision 3 \\
+                   --max-iter 10  \\
+                   --gen-per-year 250 \\
+                   --keep-polytomies 
+    fi
+
+    # reconstruct ancestral features
+    augur traits --tree  tree3_timetree.nwk \\
+            --metadata ${metadata} \\
+            --output-node-data traits.json \\
+            --columns country \\
+            --confidence
                 
     """
+}
+
+process find_country_coordinates {
+    // use openstretmap api to request geographical objects cordinates
+    container  = params.main_image
+    tag "Preparaing geo data for analyzed data"
+    cpus 1
+    memory "20 GB"
+    time "2h"
+    input:
+    path(metadata)
+    output:
+    path("longlang.txt")
+    script:
+    """
+    python /opt/docker/custom_scripts/extract_geodata.py  --input_metadata ${metadata} \
+                                                          --output_metadata longlang.txt \
+                                                          --features country
+    """
+
 }
 
 process save_input_to_log {
@@ -310,6 +363,8 @@ if (params.input_type == 'fasta') {
 }
 
 roary_out = run_roary(gff_input)
+
+find_country_coordinates_out = find_country_coordinates(metadata_channel)
 
 augur_index_sequences_out = augur_index_sequences(roary_out)
 
