@@ -3,8 +3,8 @@ import os
 import pytest
 from Bio import SeqIO
 
-from find_identical_seqences import find_identical_sequences
-from find_identical_seqences import write_identical_sequences, write_unique_fasta
+from find_identical_sequences import find_identical_sequences
+from find_identical_sequences import write_identical_sequences, write_unique_fasta
 
 
 @pytest.fixture

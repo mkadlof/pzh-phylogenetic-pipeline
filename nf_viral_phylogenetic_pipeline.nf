@@ -10,6 +10,8 @@ include { find_identical_sequences } from './modules/find_identical_sequences.nf
 include { augur_align } from './modules/augur_align.nf'
 include { remove_duplicates_from_alignment } from './modules/remove_duplicates_from_alignment.nf'
 include { iqtree } from './modules/iqtree.nf'
+include { insert_duplicates_into_tree } from './modules/insert_duplicates_into_tree.nf'
+include { insert_duplicates_into_alignment } from './modules/insert_duplicates_into_alignment.nf'
 
 workflow {
     augur_index_sequences(input_fasta)
@@ -18,25 +20,8 @@ workflow {
     find_identical_sequences(augur_filter_sequences.out)
     augur_align(find_identical_sequences.out.uniq_fasta)
     iqtree(augur_align.out)
-
-//     remove_duplicates_from_alignment(augur_align.out, find_identical_sequences.out.duplicated_ids)
-//     insert_duplicates(build_tree.out, find_identical_sequences.ids, params.output_dir)
+    insert_duplicates_into_tree(iqtree.out, find_identical_sequences.out.duplicated_ids)
+    insert_duplicates_into_alignment(augur_align.out, find_identical_sequences.out.duplicated_ids)
 }
 
-//
-// process insert_duplicates {
-//     input:
-//     path tree
-//     path ids
-//     path outdir
-//
-//     output:
-//     path "${outdir}/consensus_tree.nwk"
-//
-//     script:
-//     """
-//     python src/insert_missing_dupliated_sequences.py \
-//         --tree ${tree} \
-//         --ids ${ids} > ${outdir}/consensus_tree.nwk
-//     """
-// }
+

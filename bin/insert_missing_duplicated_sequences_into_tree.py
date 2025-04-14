@@ -8,7 +8,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Rozszerz drzewo Newick o brakujące identyfikatory.")
     parser.add_argument("--tree", required=True, help="Plik z drzewem Newick (np. tree.nwk)")
     parser.add_argument("--ids", required=True, help="Plik CSV z identyfikatorami (pierwszy znany, reszta do dodania)")
-    parser.add_argument("--out", help="Plik wyjściowy (jeśli nie podano, wypisuje na stdout)")
+    parser.add_argument("--output", help="Plik wyjściowy (jeśli nie podano, wypisuje na stdout)")
     return parser.parse_args()
 
 def load_id_map(path):
@@ -37,8 +37,8 @@ def main():
     id_map = load_id_map(args.ids)
     extended = extend_newick(newick_str, id_map)
 
-    if args.out:
-        with open(args.out, "w") as f:
+    if args.output:
+        with open(args.output, "w") as f:
             f.write(extended + "\n")
     else:
         print(extended)
