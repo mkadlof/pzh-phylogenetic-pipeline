@@ -8,7 +8,8 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 RUN apt update -y && apt install --no-install-recommends -y \
     python3 \
     python3-venv \
-    mafft
+    mafft \
+    iqtree
 
 RUN python3 -m venv /opt/venv
 
