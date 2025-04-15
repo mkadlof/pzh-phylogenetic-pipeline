@@ -17,9 +17,9 @@ Quick start
    ```bash
    docker build -t pzh_pzh-phylogenetic .
    ```
-5. Run the pipeline
+5. Run the pipeline on example data:
    ```bash
-   ./run_pipeline.sh
+   ./run_viral_pipeline.sh
     ```
 
 
