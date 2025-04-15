@@ -12,6 +12,7 @@ include { remove_duplicates_from_alignment } from './modules/remove_duplicates_f
 include { iqtree } from './modules/iqtree.nf'
 include { insert_duplicates_into_tree } from './modules/insert_duplicates_into_tree.nf'
 include { insert_duplicates_into_alignment } from './modules/insert_duplicates_into_alignment.nf'
+include { treetime } from './modules/treetime.nf'
 
 workflow {
     augur_index_sequences(input_fasta)
@@ -22,6 +23,7 @@ workflow {
     iqtree(augur_align.out)
     insert_duplicates_into_tree(iqtree.out, find_identical_sequences.out.duplicated_ids)
     insert_duplicates_into_alignment(augur_align.out, find_identical_sequences.out.duplicated_ids)
+    treetime(insert_duplicates_into_alignment.out, metadata, insert_duplicates_into_tree.out)
 }
 
 
