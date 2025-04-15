@@ -6,9 +6,9 @@
   "build_url": "https://github.com/nextstrain/zika-tutorial",
   "colorings": [
     {
-      "key": "num_date",
-      "title": "Date",
-      "type": "continuous"
+      "key": "MLST",
+      "title": "MLST",
+      "type": "categorical"
     },
     {
       "key": "country",
@@ -16,8 +16,8 @@
       "type": "categorical"
     },
     {
-      "key": "region",
-      "title": "Region",
+      "key": "Serovar",
+      "title": "Serovar",
       "type": "categorical"
     }
   ],

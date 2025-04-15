@@ -1,6 +1,5 @@
 from Bio import SeqIO
 import click
-import sys
 from collections import Counter
 from typing import Dict, Tuple, Any, List
 import logging
@@ -131,7 +130,7 @@ def remove_constant_sites_amd_indels(slownik_alignmentu:Dict) -> Dict:
 @click.option('--input_fasta_annotation', help='[INPUT] a file with core genome annotation in embl format ',
               type=click.Path(), required=True)
 @click.option('--model', help='[INPUT] a model that will be used for a phylogenetic analysis',
-              type=str, required=True, default="GTR+G+FO")
+              type=str, required=True, default="GTR+G")
 @click.option('--max_gap', help='[INPUT] Max gap length observed in any sample with respect to the alignment '
                                 'length to keep a gene for downstream phylogenetic analysis',
               type=int, required=True, default=50)
@@ -141,8 +140,10 @@ def remove_constant_sites_amd_indels(slownik_alignmentu:Dict) -> Dict:
               type=str, required=True)
 @click.option('--cpus', help='[INPUT] a number of cpus to use',
               type=int, required=False, default=1)
+@click.option('--merge_genes', help='[INPUT] In partition collapse all entries into single row and add "global" '
+                              'ASC_STAM correction',is_flag=True)
 
-def main(input_fasta, input_fasta_annotation, model, output_fasta, max_gap, output_partition, cpus) -> None:
+def main(input_fasta, input_fasta_annotation, model, output_fasta, max_gap, output_partition, merge_genes, cpus) -> None:
     alignment_dict = {}
     ASAM_correction = {}
     pool = Pool(cpus)
@@ -151,7 +152,7 @@ def main(input_fasta, input_fasta_annotation, model, output_fasta, max_gap, outp
 
     # Count constant sites
 
-    A_num, T_num, G_mum, C_num = count_constant_sites(plik_alignment=input_fasta)
+    global_STAM_values = count_constant_sites(plik_alignment=input_fasta)
 
     with open(input_fasta_annotation, "r") as input_annotation_handle:
         record = SeqIO.read(input_annotation_handle, "embl")  # Read the first record
@@ -196,15 +197,24 @@ def main(input_fasta, input_fasta_annotation, model, output_fasta, max_gap, outp
         for klucz,wartosc in alignment_dict_final.items():
             output_handle.write(f">{klucz}\n{wartosc}\n")
 
-    #  dump new partition into a file
-    print(ASAM_correction)
-    with open(output_partition, "w") as output_handle:
-        for gen, partition in partition_dict.items():
-            STAM_correction = f"ASC_STAM{{{'/'.join(map(str, ASAM_correction[gen]))}}}"
-            output_handle.write(f"{model}+{STAM_correction}, {gen}={partition[0]}-{partition[1]}\n")
+    #  dump new partition into a file and add ASM correction to the user-specified model
+    #  propably only if snp tree is provided as parameter (TO DO)ls -
 
-    with open("constant_sites.txt", "w") as output_handle:
-        output_handle.write(f"{A_num}\t{T_num}\t{G_mum}\t{C_num}\n")
+    with open(output_partition, "w") as output_handle:
+        if not merge_genes:
+            for gen, partition in partition_dict.items():
+                STAM_correction = f"ASC_STAM{{{'/'.join(map(str, ASAM_correction[gen]))}}}"
+                output_handle.write(f"{model}+{STAM_correction}, {gen}={partition[0]}-{partition[1]}\n")
+        else:
+            # partition ha one entry
+            STAM_correction = f"ASC_STAM{{{'/'.join(map(str, global_STAM_values))}}}"
+            last_gen = gen_list[-1]
+            output_handle.write(f"{model}+{STAM_correction}, full_genome=1-{partition_dict[last_gen][1]}\n")
+
+
+    #  Obsole, added ASM for each gene partition file
+    # with open("constant_sites.txt", "w") as output_handle:
+    #     output_handle.write(f"{A_num}\t{T_num}\t{G_mum}\t{C_num}\n")
 
 if __name__ == '__main__':
     main()

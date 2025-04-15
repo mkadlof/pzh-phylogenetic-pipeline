@@ -157,7 +157,8 @@ process prepare_SNPs_alignment {
                                                                            --output_fasta alignment_SNPs.fasta \
                                                                            --output_partition partition.txt \
                                                                            --cpus ${task.cpus} \
-                                                                           --max_gap 30
+                                                                           --max_gap 30 \
+                                                                           --merge_genes
 
     """
 }
@@ -184,7 +185,7 @@ process identify_identical_seqences {
 process run_raxml {
     container  = params.main_image
     tag "Calculating SNPs tree"
-    cpus { params.threads > 30 ? 30 : params.threads }
+    cpus { params.threads > 40 ? 40 : params.threads }
     memory "50 GB"
     time "8h"
     input:
@@ -206,6 +207,7 @@ process run_raxml {
              --bs-trees ${nboots} \\
              --prefix tree \\
              --force \\
+             --workers 5 \\
              --brlen scaled
     """  
 }
