@@ -1,9 +1,9 @@
 {
-  "title": "Test for Salmonella",
+  "title": "Spatiotemporal analysis of Salmonella",
   "maintainers": [
-    {"name": "Michal", "url": "http://google.com/"}
+    {"name": "Michal Lazniewski", "url": "www.pzh.gov.pl/projekty-i-programy/plepiseq/"}
   ],
-  "build_url": "https://github.com/nextstrain/zika-tutorial",
+  "build_url": "https://github.com/mkadlof/pzh-phylogenetic-pipeline",
   "colorings": [
     {
       "key": "MLST",
@@ -16,13 +16,19 @@
       "type": "categorical"
     },
     {
+      "key": "city",
+      "title": "City",
+      "type": "categorical"
+    },
+    {
       "key": "Serovar",
       "title": "Serovar",
       "type": "categorical"
     }
   ],
   "geo_resolutions": [
-    "country"
+    "country",
+    "city"
   ],
   "panels": [
      "tree",

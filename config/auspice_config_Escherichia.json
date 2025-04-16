@@ -1,0 +1,45 @@
+{
+  "title": "Spatiotemporal analysis of Salmonella",
+  "maintainers": [
+    {"name": "Michal Lazniewski", "url": "www.pzh.gov.pl/projekty-i-programy/plepiseq/"}
+  ],
+  "build_url": "https://github.com/mkadlof/pzh-phylogenetic-pipeline",
+  "colorings": [
+    {
+      "key": "MLST",
+      "title": "MLST",
+      "type": "categorical"
+    },
+    {
+      "key": "country",
+      "title": "Country",
+      "type": "categorical"
+    },
+    {
+      "key": "city",
+      "title": "City",
+      "type": "categorical"
+    },
+    {
+      "key": "Serovar",
+      "title": "Serovar",
+      "type": "categorical"
+    }
+  ],
+  "geo_resolutions": [
+    "country",
+    "city"
+  ],
+  "panels": [
+     "tree",
+     "map",
+     "entropy"
+  ],
+  "display_defaults": {
+    "map_triplicate": true
+  },
+  "filters": [
+    "country"
+  ]
+}
+
