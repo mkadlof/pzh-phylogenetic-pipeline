@@ -20,10 +20,12 @@ params.clockrate = "" // User can still overrride any built-in and estimated val
 params.gen_per_year = ""
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
 
-if ( params.genus  == 'Salmonella' || params.genus  == 'Escherichia' || params.genus == 'Campylobacter') {
-    println("The program works only with Salmonella, Escherichia, and Campylobacter genera")
-    println("in provided sample(s), sub-programs will not execute, regardles of the genus that was provided by a user")
-} 
+if ( params.genus != 'Salmonella' && params.genus != 'Escherichia' && params.genus != 'Campylobacter' ) {
+    println("The program will not execute unless the provided genus is Salmonella, Escherichia, or Campylobacter.")
+    System.exit(1)
+} else {
+    println("Running pipeline for genus: ${params.genus}")
+}
 
 
 if ( !workflow.profile || ( workflow.profile != "slurm" && workflow.profile != "local") ) {
@@ -208,7 +210,7 @@ process run_raxml {
     if [ ${task.cpus} -lt 12 ]; then
       WORKERS=1
     else
-      WORKERS=$((${task.cpus} / 12))
+      WORKERS=\$((${task.cpus} / 12))
     fi
 
     raxml-ng --all \\
