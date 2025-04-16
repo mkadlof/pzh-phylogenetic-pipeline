@@ -15,11 +15,16 @@ params.model = "GTR+G" // Model for raxml
 params.starting_trees = 10 // Number of random initial trees
 params.bootsrap = 200 // Number of bootstraps
 params.min_support = 70 // Minimum support for a branch to keep it in a tree
-params.species = "" // We will supplement pipeline with clock rates for relevant species so we need that info
-params.clockrate = ""
+params.genus = "" // We will supplement pipeline with clock rates for relevant genus if temporal singal in the alignment is week
+params.clockrate = "" // User can still overrride any built-in and estimated values fron the alignment
 params.gen_per_year = ""
-params.auspice_config = "" // Auspice input json
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
+
+if ( params.genus  == 'Salmonella' || params.genus  == 'Escherichia' || params.genus == 'Campylobacter') {
+    println("The program works only with Salmonella, Escherichia, and Campylobacter genera")
+    println("in provided sample(s), sub-programs will not execute, regardles of the genus that was provided by a user")
+} 
+
 
 if ( !workflow.profile || ( workflow.profile != "slurm" && workflow.profile != "local") ) {
    println("Nextflow run must be executed with -profile option. The specified profile must be either \"local\" or \"slurm\".")
@@ -151,6 +156,9 @@ process prepare_SNPs_alignment {
     script:
     """
     # --max_gap exxlude from the analysis genes for which at least one sample missing more than 30% of sequence
+    # --merge_genes partiotin file wont have many entries, one for each gene, but rather a signle entry 
+    # for an entire genome + total number of constant sites observed in the initial alignment
+    # this significantly speeds up the calculations by raxml as there are no partitions
     python /opt/docker/custom_scripts/prep_SNPs_alignment_and_partition.py --input_fasta ${fasta} \
                                                                            --input_fasta_annotation ${embl} \
                                                                            --model ${params.model} \
@@ -185,7 +193,7 @@ process identify_identical_seqences {
 process run_raxml {
     container  = params.main_image
     tag "Calculating SNPs tree"
-    cpus { params.threads > 40 ? 40 : params.threads }
+    cpus params.threads
     memory "50 GB"
     time "8h"
     input:
@@ -197,6 +205,12 @@ process run_raxml {
     def nboots = params.bootsrap
 
     """
+    if [ ${task.cpus} -lt 12 ]; then
+      WORKERS=1
+    else
+      WORKERS=$((${task.cpus} / 12))
+    fi
+
     raxml-ng --all \\
              --msa ${fasta} \\
              --precision 4 \\
@@ -207,7 +221,7 @@ process run_raxml {
              --bs-trees ${nboots} \\
              --prefix tree \\
              --force \\
-             --workers 5 \\
+             --workers \${WORKERS} \\
              --brlen scaled
     """  
 }
@@ -253,50 +267,74 @@ process add_temporal_data {
     tuple path("tree3_timetree.nwk"), path("branch_lengths.json"), path("traits.json")
     script:
     """
-   
-    # Estimate clock rate if correlation is poor use predefined values for a species ...
-    cat $metadata | tr "\\t" "," >> metadata.csv
-    /usr/local/bin/treetime clock --tree $tree --aln $alignment --dates metadata.csv >> log 2>&1
-    CORRELATION=`cat log  | grep "r^2" | awk '{print \$2}'`
-    if awk "BEGIN {if (\${CORRELATION} < 0.5) exit 0; else exit 1}"; then
-      augur refine --tree ${tree} \\
-                   --alignment ${alignment} \\
-                   --metadata ${metadata} \\
-                   --output-tree tree3_timetree.nwk \\
-                   --output-node-data branch_lengths.json \\
-                   --timetree \\
-                   --coalescent opt \\
-                   --date-confidence \\
-                   --date-inference marginal \\
-                   --precision 3 \\
-                   --max-iter 10  \\
-                   --gen-per-year 250 \\
-                   --keep-polytomies \\
-                   --clock-rate 1e-5
 
-# --clock-filter-iqd 4 we want to keep al nodes for now
-    else
+    run_augur() {
+       local CR=("\${!1}")
        augur refine --tree ${tree} \\
-                   --alignment ${alignment} \\
-                   --metadata ${metadata} \\
-                   --output-tree tree3_timetree.nwk \\
-                   --output-node-data branch_lengths.json \\
-                   --timetree \\
-                   --coalescent opt \\
-                   --date-confidence \\
-                   --date-inference marginal \\
-                   --precision 3 \\
-                   --max-iter 10  \\
-                   --gen-per-year 250 \\
-                   --keep-polytomies 
-    fi
+                    --alignment ${alignment} \\
+                     --metadata ${metadata} \\
+                     --output-tree tree3_timetree.nwk \\
+                     --output-node-data branch_lengths.json \\
+                     --timetree \\
+                     --coalescent opt \\
+                     --date-confidence \\
+                     --date-inference marginal \\
+                     --precision 3 \\
+                     --max-iter 10  \\
+                     --gen-per-year 250 \\
+                     --keep-polytomies \\
+                     --clock-rate \${CR}
+   done
+
+   }
+
+    if [ ${params.clockrate} != "" ]; then
+       # use user provede parameters for treetime overwrites all safeguards
+       run_augur ${params.clockrate}
+
+    else
+     
+      # Estimate clock rate if correlation is poor use predefined values for a provided genus ... better than nothing i guess
+      cat $metadata | tr "\\t" "," >> metadata.csv
+      /usr/local/bin/treetime clock --tree $tree --aln $alignment --dates metadata.csv >> log 2>&1
+      CORRELATION=`cat log  | grep "r^2" | awk '{print \$2}'`
+      if awk "BEGIN {if (\${CORRELATION} < 0.5) exit 0; else exit 1}"; then
+        # We have poor fitness of our data we provide treetime with own set of parameters ...
+        if [ params.genus  == 'Salmonella' ]; then
+          clockrate="2e-7"
+        elif [ params.genus  == 'Escherichia' ]; then
+          clockrate="8e-9"
+        elif [ params.genus == 'Campylobacter'); then
+          clockrate="6e-6"
+        fi
+        run_augur \${clockrate}
+      else
+        # we run treetime without specifyng clock rate, alignment is ok
+         
+        augur refine --tree ${tree} \\
+                    --alignment ${alignment} \\
+                    --metadata ${metadata} \\
+                    --output-tree tree3_timetree.nwk \\
+                    --output-node-data branch_lengths.json \\
+                    --timetree \\
+                    --coalescent opt \\
+                    --date-confidence \\
+                    --date-inference marginal \\
+                    --precision 3 \\
+                    --max-iter 10  \\
+                    --gen-per-year 250 \\
+                    --keep-polytomies 
+      fi  # End for CORRELATION estimation
+    
+    fi # End for user provided clockrate
 
     # reconstruct ancestral features
+    
     augur traits --tree  tree3_timetree.nwk \\
-            --metadata ${metadata} \\
-            --output-node-data traits.json \\
-            --columns country \\
-            --confidence
+                 --metadata ${metadata} \\
+                 --output-node-data traits.json \\
+                 --columns "country division" \\
+                 --confidence
                 
     """
 }
@@ -315,8 +353,11 @@ process find_country_coordinates {
     script:
     """
     python /opt/docker/custom_scripts/extract_geodata.py  --input_metadata ${metadata} \
-                                                          --output_metadata longlang.txt \
-                                                          --features country
+                                                          --output_metadata tmp.txt \
+                                                          --features country \
+                                                          --features city
+    # sort file usong feature name
+    cat tmp.txt | sort -k1 > longlang.txt
     """
 
 }
@@ -349,7 +390,6 @@ process visualize_tree {
     tuple path(tree), path(branch_lengths), path(traits)
     tuple path(longlat), path(colors)
     path(metadata)
-    path(auspice)
     output:
     path("auspice.json")
     script:
@@ -358,7 +398,7 @@ process visualize_tree {
     augur export v2 --tree ${tree} \
             --metadata ${metadata} \
             --node-data ${branch_lengths} ${traits} \
-            --auspice-config ${auspice} \
+            --auspice-config /opt/docker/config/auspice_config_${params.genus}.json \
             --colors ${colors} \
             --lat-longs ${longlat} \
             --output auspice.json \
@@ -388,10 +428,6 @@ workflow {
 Channel
     .fromPath("${params.metadata}")
     .set {metadata_channel}
-
-Channel
-    .fromPath("${params.auspice_config}")
-    .set {ausipice_json}
 
 // Prepare gff input
 
@@ -432,7 +468,8 @@ run_raxml_out = run_raxml(identify_identical_seqences_out.to_raxml)
 restore_identical_sequences_out = restore_identical_sequences(run_raxml_out.tree, identify_identical_seqences_out.identical_sequences_mapping)
 
 add_temporal_data_out = add_temporal_data(restore_identical_sequences_out.tree, augur_filter_sequences_out.alignment_and_metadata)
-visualize_tree_out = visualize_tree(add_temporal_data_out, generate_colors_for_features_out, metadata_channel, ausipice_json)
+
+visualize_tree_out = visualize_tree(add_temporal_data_out, generate_colors_for_features_out, metadata_channel)
 // save_input_to_log(gff_input)
 
 }

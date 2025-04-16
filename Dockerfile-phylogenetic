@@ -44,4 +44,5 @@ RUN wget https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0
 # Custom scripts
 RUN mkdir -p /opt/docker/custom_scripts
 COPY src/* /opt/docker/custom_scripts
+CPPY config /opt/docker/
 CMD ["/bin/bash"]
