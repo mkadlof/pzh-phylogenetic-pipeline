@@ -271,7 +271,7 @@ process add_temporal_data {
     """
 
     run_augur() {
-       local CR=("\${!1}")
+       local CR="\${1}"
        augur refine --tree ${tree} \\
                     --alignment ${alignment} \\
                      --metadata ${metadata} \\
@@ -289,7 +289,7 @@ process add_temporal_data {
 
    }
 
-    if [ ${params.clockrate} != "" ]; then
+    if [ -n "${params.clockrate}"  ]; then
        # use user provede parameters for treetime overwrites all safeguards
        run_augur ${params.clockrate}
 
@@ -301,11 +301,11 @@ process add_temporal_data {
       CORRELATION=`cat log  | grep "r^2" | awk '{print \$2}'`
       if awk "BEGIN {if (\${CORRELATION} < 0.5) exit 0; else exit 1}"; then
         # We have poor fitness of our data we provide treetime with own set of parameters ...
-        if [ params.genus  == 'Salmonella' ]; then
+        if [ ${params.genus}  == 'Salmonella' ]; then
           clockrate="2e-7"
-        elif [ params.genus  == 'Escherichia' ]; then
+        elif [ ${params.genus}  == 'Escherichia' ]; then
           clockrate="8e-9"
-        elif [ params.genus == 'Campylobacter']; then
+        elif [ ${params.genus} == 'Campylobacter']; then
           clockrate="6e-6"
         fi
         run_augur \${clockrate}
