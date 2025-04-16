@@ -286,7 +286,6 @@ process add_temporal_data {
                      --gen-per-year 250 \\
                      --keep-polytomies \\
                      --clock-rate \${CR}
-   done
 
    }
 
@@ -306,7 +305,7 @@ process add_temporal_data {
           clockrate="2e-7"
         elif [ params.genus  == 'Escherichia' ]; then
           clockrate="8e-9"
-        elif [ params.genus == 'Campylobacter'); then
+        elif [ params.genus == 'Campylobacter']; then
           clockrate="6e-6"
         fi
         run_augur \${clockrate}
