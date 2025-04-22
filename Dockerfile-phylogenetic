@@ -13,7 +13,7 @@ RUN apt update && apt install -y software-properties-common && \
     python3.11 python3.11-distutils \
     curl unzip wget vim bc htop git gcc \
     zlib1g-dev libbz2-dev libcurl4-gnutls-dev libssl-dev liblzma-dev \
-    python3-pycurl screen mash seqtk roary bison flex default-jre cmake
+    python3-pycurl screen mash seqtk roary bison flex default-jre cmake npm
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
     curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 && \
@@ -39,10 +39,22 @@ RUN git clone --recursive https://github.com/amkozlov/raxml-ng  ;\
 # IQtree2 v 2.4
 RUN wget https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0-Linux-intel.tar.gz ;\
     tar -zxf iqtree-2.4.0-Linux-intel.tar.gz ;\
-    cp iqtree-2.4.0-Linux-intel/bin/* /usr/bin 
+    cp iqtree-2.4.0-Linux-intel/bin/* /usr/bin ;\
+    cd /opt/docker
 
+# Auspice (from github, latest commit availabel at 22.04.2025)
+RUN git clone https://github.com/nextstrain/auspice.git ;\
+    cd auspice ;\
+    git checkout  0e1d21bc23e51c8ccb2f44fccac613600999a875 ;\     
+    npm ci ;\
+    npm install --global .
+
+# we set up host, in principle this dockerfile does not run auspice as a separate service
+# so we still need to start auspice manually within a running container. But this way I won't need to remember  that
+ENV HOST=0.0.0.0
+    
 # Custom scripts
-RUN mkdir -p /opt/docker/custom_scripts
+RUN mkdir -p /opt/docker/custom_scripts; /opt/docker/config
 COPY src/* /opt/docker/custom_scripts
-COPY config /opt/docker/
+COPY config/ /opt/docker/config
 CMD ["/bin/bash"]
