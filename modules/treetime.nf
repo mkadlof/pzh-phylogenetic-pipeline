@@ -5,15 +5,20 @@ process treetime {
     path tree
 
     output:
-    path "timetree.nexus", emit: out
+    path "timetree.nwk", emit: timetree
+    path "*.node_data.json", emit: node_data
 
     script:
     """
-    treetime --aln ${alignment} \
-             --dates ${metadata} \
-             --tree ${tree} \
-             --keep-polytomies
-    mv *_treetime/* .
-    rmdir *_treetime
+    augur refine \
+        --alignment ${alignment} \
+        --tree ${tree} \
+        --metadata ${metadata} \
+        --output-tree timetree.nwk \
+        --keep-polytomies \
+        --branch-length-inference joint \
+        --keep-root \
+        --timetree \
+        --verbosity 6
     """
 }

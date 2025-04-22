@@ -17,3 +17,5 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install nextstrain-augur \
         Biopython
+
+COPY data/auspice_config.json /etc/auspice/auspice_config.json
