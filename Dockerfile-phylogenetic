@@ -47,7 +47,8 @@ RUN git clone https://github.com/nextstrain/auspice.git ;\
     cd auspice ;\
     git checkout  0e1d21bc23e51c8ccb2f44fccac613600999a875 ;\     
     npm ci ;\
-    npm install --global .
+    npm install --global . ;\
+    cd /opt/docker
 
 # we set up host, in principle this dockerfile does not run auspice as a separate service
 # so we still need to start auspice manually within a running container. But this way I won't need to remember  that
