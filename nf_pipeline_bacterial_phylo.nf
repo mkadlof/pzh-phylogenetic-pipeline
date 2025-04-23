@@ -6,6 +6,7 @@ ExecutionDir = new File('.').absolutePath
 // Comments were preserved in the  nf file for a local executor
 params.input_dir = ""
 params.input_type = ""
+params.input_prefix = "" // Used only to 1. create subdirectory in params.results_dir and 2. as a prefix for auspice files. These prefix is used by auspice as part of an adress e..g "flu_ha_h1n1_timestamp" or "sarscov2_timestamp" or "salmonella_poland_timestamp"
 params.main_image = "" 
 params.results_dir = ""
 params.prokka_image = ""
@@ -42,7 +43,6 @@ params.threshold_ambiguities = 100
 
 
 process run_prokka {
-  // publishDir "${params.results_dir}/${x}/", mode: 'copy', pattern: "${x}_prokka*"
   container  = params.prokka_image
   tag "Predicting genes for sample $x"
   cpus { params.threads > 25 ? 25 : params.threads }
@@ -131,6 +131,14 @@ process augur_filter_sequences {
                                                                         --threshold_Ns ${params.threshold_Ns} \
                                                                         --threshold_ambiguities ${params.threshold_ambiguities} \
                                                                         $index
+    # TO DO add a script that can retain only biologicall valid entries from a set of sequences
+    # This should be based on specific REQUIRED column in metadata file ( our NGS pipeline return this info)
+    # Salmonella - predicted serovar level (e.g. only Montevideo)
+    # Campylobacter - TO DO 
+    # E.coli - serotype 
+    # Influenza - subtype level (e.g. only H1N1pdm09)
+    # SARS-Cov-2 no filters 
+    # RSV type level (only A ot only B) 
     
     # For now we use augur filter to preprare fasta file without invalid_strains.txt prepared with filter_low_quality_sequences script 
     # Other usefull options --min-length --max-length  --group-by which we do not use for now
@@ -213,9 +221,10 @@ process run_raxml {
       WORKERS=\$((${task.cpus} / 12))
     fi
 
+    # Modified precision to get in nwk even small distances 
     raxml-ng --all \\
              --msa ${fasta} \\
-             --precision 4 \\
+             --precision 15 \\
              --threads ${task.cpus} \\
              --model ${partition} \\
              --site-repeats on \\
@@ -302,7 +311,7 @@ process add_temporal_data {
       if awk "BEGIN {if (\${CORRELATION} < 0.5) exit 0; else exit 1}"; then
         # We have poor fitness of our data we provide treetime with own set of parameters ...
         if [ ${params.genus}  == 'Salmonella' ]; then
-          clockrate="2e-7"
+          clockrate="2e-6"
         elif [ ${params.genus}  == 'Escherichia' ]; then
           clockrate="8e-9"
         elif [ ${params.genus} == 'Campylobacter']; then
@@ -338,6 +347,40 @@ process add_temporal_data {
                  --confidence
                 
     """
+}
+
+process run_dummy_refine {
+    // This process runs augur refine without tree time. It goal is to produce valif branch_lengths.json file for oryginal nwk trre from raxml-ng
+    // So it can visualized alongside actual timetrr 
+    container  = params.main_image
+    tag "Adding temporal data to tree"
+    cpus 1
+    memory "20 GB"
+    time "5h"
+    input:
+    path(tree)
+    tuple path(alignment), path(metadata)
+    output:
+    tuple path("tree3_notimetree.nwk"), path("branch_lengths_notime.json")
+    script:
+    """
+
+    run_augur() {
+       augur refine --tree ${tree} \\
+                    --alignment ${alignment} \\
+                    --metadata ${metadata} \\
+                    --output-tree tree3_notimetree.nwk \\
+                    --output-node-data branch_lengths_notime.json \\
+                    --branch-length-inference input \\
+                    --keep-polytomies \\
+                    --keep-root
+
+   }
+
+   # Run castrated augur
+   run_augur
+   
+   """
 }
 
 process find_country_coordinates {
@@ -381,8 +424,10 @@ process generate_colors_for_features {
     """
 
 }
-process visualize_tree {
+
+process visualize_tree_1 {
     container  = params.main_image
+    publishDir "${params.results_dir}/${params.input_prefix}/", mode: 'copy', pattern: "${params.input_prefix}_${suffix}.json"
     tag "Visualizing the data"
     cpus 1
     memory "20 GB"
@@ -391,8 +436,9 @@ process visualize_tree {
     tuple path(tree), path(branch_lengths), path(traits)
     tuple path(longlat), path(colors)
     path(metadata)
+    val(suffix) // either timetree or regulartree
     output:
-    path("auspice.json")
+    path("${params.input_prefix}_${suffix}.json")
     script:
     """
 
@@ -402,10 +448,40 @@ process visualize_tree {
             --auspice-config /opt/docker/config/auspice_config_${params.genus}.json \
             --colors ${colors} \
             --lat-longs ${longlat} \
-            --output auspice.json \
+            --output ${params.input_prefix}_${suffix}.json \
             """
 
 }
+
+
+
+process visualize_tree_2 {
+    container  = params.main_image
+    publishDir "${params.results_dir}/${params.input_prefix}/", mode: 'copy', pattern: "${params.input_prefix}_${suffix}.json"
+    tag "Visualizing the data"
+    cpus 1
+    memory "20 GB"                        
+    time "2h"
+    input:
+    tuple path(tree), path(branch_lengths)
+    tuple path(longlat), path(colors)
+    path(metadata)
+    val(suffix) // either timetree or regulartree
+    output:
+    path("${params.input_prefix}_${suffix}.json")
+    script:
+    """
+    augur export v2 --tree ${tree} \
+                     --metadata ${metadata} \
+                     --node-data ${branch_lengths} \
+                     --auspice-config /opt/docker/config/auspice_config_${params.genus}.json \
+                     --colors ${colors} \
+                     --lat-longs ${longlat} \
+                     --output ${params.input_prefix}_${suffix}.json \
+            """
+
+}                                                                                                                                                                                                 
+
 
 
 process save_input_to_log {
@@ -470,7 +546,11 @@ restore_identical_sequences_out = restore_identical_sequences(run_raxml_out.tree
 
 add_temporal_data_out = add_temporal_data(restore_identical_sequences_out.tree, augur_filter_sequences_out.alignment_and_metadata)
 
-visualize_tree_out = visualize_tree(add_temporal_data_out, generate_colors_for_features_out, metadata_channel)
+add_dummy_data_out = run_dummy_refine(restore_identical_sequences_out.tree, augur_filter_sequences_out.alignment_and_metadata) 
+
+
+visualize_tree_out_1 = visualize_tree_1(add_temporal_data_out, generate_colors_for_features_out, metadata_channel, "timetree")
+visualize_tree_out_2 = visualize_tree_2(add_dummy_data_out, generate_colors_for_features_out, metadata_channel, "regulartree")
 // save_input_to_log(gff_input)
 
 }
