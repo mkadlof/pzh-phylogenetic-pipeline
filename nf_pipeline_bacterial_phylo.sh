@@ -30,7 +30,7 @@ startingTrees=10 # Number of random initial trees
 bootstrap=200 # Number of bootstraps
 minSupport=70 # Minimum support for a branch to keep it in a tree
 clockRate="" # User can still overrride any built-in and estimated values fron the alignment. If empty data derived
-threads=40 # ilosc watkow uzywanych maksymalnie przez pipeline
+threads=36 # ilosc watkow uzywanych maksymalnie przez pipeline
 # QC params
 thresholdN=100 # maksymalna ilosc N w genomie
 thresholdAmbigous=100 # maksymalna ilosc znakow ambigous w genomie
@@ -148,8 +148,9 @@ if ! [[ "$threads" =~ ^[0-9]+$ ]] || [ "$threads" -le 0 ] || [ "$threads" -gt "$
     echo "Błąd: liczba wątków '$threads' jest nieprawidłowa. Dozwolone wartości: od 1 do $max_cpus."; exit 1
 fi
 
-
-
+if [ $((threads % 12)) -ne 0 ]; then
+    echo "Błąd: liczba wątków ($threads) musi być wielokrotnością 12"; exit 1
+fi
 
 nextflow run ${projectDir}/nf_pipeline_bacterial_phylo.nf \
 	     --input_dir ${inputDir} \

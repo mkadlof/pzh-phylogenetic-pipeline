@@ -43,10 +43,13 @@ RUN wget https://github.com/iqtree/iqtree2/releases/download/v2.4.0/iqtree-2.4.0
     cd /opt/docker
 
 # Auspice (from github, latest commit availabel at 22.04.2025)
+# There is an issue when trying to use mapbox on a localhost, solution is here (modyfing source code to switch to openmaps + rebuildin auspice)
+# https://discussion.nextstrain.org/t/build-with-newest-nextstrain-ncov-has-api-requests-to-mapbox-403-forbidden/396/11?u=james
 RUN git clone https://github.com/nextstrain/auspice.git ;\
     cd auspice ;\
     git checkout  0e1d21bc23e51c8ccb2f44fccac613600999a875 ;\     
     npm ci ;\
+    npm audit fix ;\
     npm install --global . ;\
     cd /opt/docker
 
