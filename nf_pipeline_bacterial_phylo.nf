@@ -14,7 +14,7 @@ params.threads = 1
 params.metadata = "" // Path to a file with metadata
 params.model = "GTR+G" // Model for raxml
 params.starting_trees = 10 // Number of random initial trees
-params.bootsrap = 200 // Number of bootstraps
+params.bootstrap = 200 // Number of bootstraps
 params.min_support = 70 // Minimum support for a branch to keep it in a tree
 params.genus = "" // We will supplement pipeline with clock rates for relevant genus if temporal singal in the alignment is week
 params.clockrate = "" // User can still overrride any built-in and estimated values fron the alignment
@@ -212,7 +212,7 @@ process run_raxml {
     path("tree.raxml.support"), emit: tree
     script:
     def ntrees = params.starting_trees
-    def nboots = params.bootsrap
+    def nboots = params.bootstrap
 
     """
     if [ ${task.cpus} -lt 12 ]; then
