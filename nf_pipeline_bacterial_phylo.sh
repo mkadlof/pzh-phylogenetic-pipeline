@@ -34,7 +34,8 @@ threads=36 # ilosc watkow uzywanych maksymalnie przez pipeline
 # QC params
 thresholdN=100 # maksymalna ilosc N w genomie
 thresholdAmbigous=100 # maksymalna ilosc znakow ambigous w genomie
-
+# Visualization
+map_detail="city"  #  poziom hierarchi na mapie przypisany probce. Mozliwe wartosci to country lub city. 
 
 # Usage function to display help
 usage() {
@@ -57,19 +58,21 @@ usage() {
     echo "  --model MODEL                     Model substytucji dla RAxML (domyślnie: GTR+G)"
     echo "  --startingTrees LICZBA            Liczba drzew startowych dla RAxML (domyślnie: 10)"
     echo "  --bootstrap LICZBA                Liczba replikacji bootstrap dla RAxML (domyślnie: 200)"
-    echo "  --minSupport LICZBA               Minimalne wsparcie gałęzi, by pozostała w końcowym drzewie (domyślnie: 70)"
+    echo "  --minSupport LICZBA               Minimalne wsparcie gałęzi, by pozostała w końcowym drzewie (domyslnie: 70)"
     echo "  --threads LICZBA                  Liczba rdzeni CPU do wykorzystania (domyślnie: 40)"
     echo "  --thresholdN LICZBA               Maksymalna liczba znaków 'N' w genomie (domyślnie: 100)"
     echo "  --thresholdAmbigous LICZBA        Maksymalna liczba niejednoznacznych znaków w genomie (domyślnie: 100)"
     echo "  --main_image NAZWA:TAG            Obraz Docker zawierający narzędzia używane przez pipeline"
     echo "  --prokka_image NAZWA:TAG          Obraz Docker z oprogramowaniem Prokka"
-    echo "  -h, --help                      Show this help message"
+    echo "  --map_detail STR                  Informacja czy na mapie probka przypisana jest do poziomu kraju czy miasta"
+    echo "                                    (dozwolone wartosci 'country' lub 'city', domyslnie city)"
+    echo "  -h, --help                        Show this help message"
     exit 1
 }
 
 # Parse arguments using GNU getopt
 TEMP=$(getopt -o hm:i:t:g:p:d:o:x:r: \
---long metadata:,inputDir:,inputType:,genus:,results_prefix:,projectDir:,results_dir:,profile:,clockRate:,model:,startingTrees:,bootstrap:,minSupport:,threads:,thresholdN:,thresholdAmbigous:,main_image:,prokka_image:,help \
+--long metadata:,inputDir:,inputType:,genus:,results_prefix:,projectDir:,results_dir:,profile:,clockRate:,model:,startingTrees:,bootstrap:,minSupport:,threads:,thresholdN:,thresholdAmbigous:,main_image:,prokka_image:,map_detail:,help \
 -n "$0" -- "$@")
 
 if [ $? != 0 ]; then usage; fi
@@ -96,6 +99,7 @@ while true; do
     --thresholdAmbigous) thresholdAmbigous="$2"; shift 2 ;;
     --main_image) main_image="$2"; shift 2 ;;
     --prokka_image) prokka_image="$2"; shift 2 ;;
+    --map_detail) map_detail="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     --) shift; break ;;
     *) echo "Unknown option: $1"; exit 1 ;;
@@ -152,6 +156,11 @@ if [ $((threads % 12)) -ne 0 ]; then
     echo "Błąd: liczba wątków ($threads) musi być wielokrotnością 12"; exit 1
 fi
 
+# 7. Validate map_detail
+if [[ "${map_detail}" != "country" && "${map_detail}" != "city" ]]; then
+    echo "Błąd: nieprawidłowy typ danych wejściowych: '${map_detail}'. Dozwolone: city, country."; exit 1
+fi
+
 nextflow run ${projectDir}/nf_pipeline_bacterial_phylo.nf \
 	     --input_dir ${inputDir} \
              --input_type ${inputType} \
@@ -169,6 +178,7 @@ nextflow run ${projectDir}/nf_pipeline_bacterial_phylo.nf \
 	     --prokka_image ${prokka_image} \
 	     --results_dir ${results_dir} \
 	     --threads ${threads} \
+	     --map_detail ${map_detail} \
 	     -profile ${profile} \
 	     -with-trace
 

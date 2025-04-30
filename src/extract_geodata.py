@@ -58,16 +58,20 @@ def main(input_metadata: str, output_metadata: str, features: tuple) -> None:
                     visited_feature[feature].add(value)
             if 'state' in row and 'state' in features:
                 feature = 'state'
-                data = query_nominatim_API(query={'state': row['state']},
-                                           query_key=feature)
-                output_f.write(data)
-                visited_feature[feature].add(value)
+                value = row[feature]
+                if value not in visited_feature[feature]:
+                    data = query_nominatim_API(query={'state': row['state']},
+                                               query_key=feature)
+                    output_f.write(data)
+                    visited_feature[feature].add(value)
             if 'city' in row and 'city' in features:
                 feature = 'city'
-                data = query_nominatim_API(query={'country': row['country'], 'city': row['city']},
-                                           query_key=feature)
-                output_f.write(data)
-                visited_feature[feature].add(value)
+                value = row[feature]
+                if value not in visited_feature[feature]:
+                    data = query_nominatim_API(query={'country': row['country'], 'city': row['city']},
+                                               query_key=feature)
+                    output_f.write(data)
+                    visited_feature[feature].add(value)
 
 
 if __name__ == '__main__':

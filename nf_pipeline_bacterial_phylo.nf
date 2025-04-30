@@ -19,6 +19,10 @@ params.min_support = 70 // Minimum support for a branch to keep it in a tree
 params.genus = "" // We will supplement pipeline with clock rates for relevant genus if temporal singal in the alignment is week
 params.clockrate = "" // User can still overrride any built-in and estimated values fron the alignment
 params.gen_per_year = ""
+
+// Visulazation
+params.map_detail = "" // Czy probce przypisujemy koordynaty kraju czy miasta pochodzenia. Wymagane dla microreacta
+
 // User must use our config that has two profiles slurm and local, nextflow must be initialized with one of them
 
 if ( params.genus != 'Salmonella' && params.genus != 'Escherichia' && params.genus != 'Campylobacter' ) {
@@ -240,6 +244,7 @@ process run_raxml {
 process restore_identical_sequences {
     // Reroot initial tree, collapse poorly supported nodes
     // Reintroduce identical sequences that were removed prior to tree calculation
+    publishDir "${params.results_dir}/${params.input_prefix}/", mode: 'copy', pattern: "${params.input_prefix}_classical_tree.nwk"
     container  = params.main_image
     tag "Refining initial tree"
     cpus 1
@@ -250,6 +255,7 @@ process restore_identical_sequences {
     path(identical_sequences_mapping) 
     output:
     path("tree2_reintroduced_identical_sequences.nwk"), emit: tree
+    path("${params.input_prefix}_classical_tree.nwk"), emit: to_publishdir
     script:
     """
     python /opt/docker/custom_scripts/root_collapse_and_add_identical_seq_to_tree.py --input_mapping ${identical_sequences_mapping} \\
@@ -258,6 +264,7 @@ process restore_identical_sequences {
                                                                                      --root \\
                                                                                      --collapse \\
                                                                                      --output_prefix tree2
+    cp tree2_reintroduced_identical_sequences.nwk ${params.input_prefix}_classical_tree.nwk 
     """
     
 }
@@ -343,7 +350,7 @@ process add_temporal_data {
     augur traits --tree  tree3_timetree.nwk \\
                  --metadata ${metadata} \\
                  --output-node-data traits.json \\
-                 --columns "country division" \\
+                 --columns "country city" \\
                  --confidence
                 
     """
@@ -481,6 +488,28 @@ process visualize_tree_2 {
             """
 
 }                                                                                                                                                                                                 
+process metadata_for_microreact {
+    container  = params.main_image
+    publishDir "${params.results_dir}/${params.input_prefix}/", mode: 'copy', pattern: "${params.input_prefix}_metadata_microreact.tsv"
+    tag "Preperaning metadata for microreact"
+    cpus 1
+    memory "20 GB"
+    time "1h"
+    input:
+    tuple path(longlat), path(colors)
+    path(metadata)      
+    output:
+    path("${params.input_prefix}_metadata_microreact.tsv")
+    script:
+    """ 
+    python3 /opt/docker/custom_scripts/prep_metadata_for_microreact.py --metadata ${metadata} \
+                                                                       --coordinates ${longlat} \
+                                                                       --output "${params.input_prefix}_metadata_microreact.tsv" \
+                                                                       --level ${params.map_detail}
+    """
+  
+    
+}
 
 
 
@@ -548,6 +577,8 @@ add_temporal_data_out = add_temporal_data(restore_identical_sequences_out.tree, 
 
 add_dummy_data_out = run_dummy_refine(restore_identical_sequences_out.tree, augur_filter_sequences_out.alignment_and_metadata) 
 
+
+metadata_for_microreact_out = metadata_for_microreact(generate_colors_for_features_out, metadata_channel)
 
 visualize_tree_out_1 = visualize_tree_1(add_temporal_data_out, generate_colors_for_features_out, metadata_channel, "timetree")
 visualize_tree_out_2 = visualize_tree_2(add_dummy_data_out, generate_colors_for_features_out, metadata_channel, "regulartree")
