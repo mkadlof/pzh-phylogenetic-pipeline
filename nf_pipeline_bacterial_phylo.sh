@@ -59,7 +59,7 @@ usage() {
     echo "  --startingTrees LICZBA            Liczba drzew startowych dla RAxML (domyślnie: 10)"
     echo "  --bootstrap LICZBA                Liczba replikacji bootstrap dla RAxML (domyślnie: 200)"
     echo "  --minSupport LICZBA               Minimalne wsparcie gałęzi, by pozostała w końcowym drzewie (domyslnie: 70)"
-    echo "  --threads LICZBA                  Liczba rdzeni CPU do wykorzystania (domyślnie: 40)"
+    echo "  --threads LICZBA                  Liczba rdzeni CPU do wykorzystania (domyślnie: 36, wielkosc musi byc iloczynem 12)"
     echo "  --thresholdN LICZBA               Maksymalna liczba znaków 'N' w genomie (domyślnie: 100)"
     echo "  --thresholdAmbigous LICZBA        Maksymalna liczba niejednoznacznych znaków w genomie (domyślnie: 100)"
     echo "  --main_image NAZWA:TAG            Obraz Docker zawierający narzędzia używane przez pipeline"
