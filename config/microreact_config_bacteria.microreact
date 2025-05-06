@@ -1,0 +1,426 @@
+{
+  "charts": {},
+  "datasets": {
+    "dataset-1": {
+      "id": "dataset-1",
+      "file": "sib4",
+      "idFieldName": "strain"
+    }
+  },
+  "files": {
+    "sib4": {
+      "id": "sib4",
+      "type": "data",
+      "name": "olszyn-analysis-2025-metadata-microreact.tsv",
+      "format": "text/csv",
+      "blob": "data:application/octet-stream;base64, BLOB"
+    },
+    "a8f0": {
+      "id": "a8f0",
+      "type": "tree",
+      "name": "clasical_tree.nwk",
+      "format": "text/x-nh",
+      "blob": "data:application/octet-stream;base64, BLOB"
+    },
+    "ecd0": {
+      "blob": "data:application/octet-stream;base64, BLOB",
+      "format": "text/x-nh",
+      "id": "ecd0",
+      "name": "rescaled_tree.nwk",
+      "type": "tree"
+    }
+  },
+  "filters": {
+    "paneFilters": [],
+    "dataFilters": [],
+    "chartFilters": [],
+    "searchOperator": "includes",
+    "searchValue": "",
+    "selection": [],
+    "selectionBreakdownField": null
+  },
+  "matrices": {},
+  "maps": {
+    "map-1": {
+      "controls": false,
+      "dataType": "geographic-coordinates",
+      "grouped": true,
+      "groupMarkersByRegion": false,
+      "lasso": false,
+      "markersOpacity": 100,
+      "maxNodeSize": 64,
+      "minNodeSize": 4,
+      "nodeSize": 14,
+      "path": null,
+      "regionsColourField": null,
+      "regionsColourMethod": "entries",
+      "regionsColourOpacity": 100,
+      "regionsColourPalette": "ColorBrewer YlOrBr-2",
+      "scaleMarkers": false,
+      "scaleType": "logarithmic",
+      "showMarkers": true,
+      "showRegionOutlines": true,
+      "showRegions": true,
+      "style": "",
+      "tileLayerDialog": false,
+      "tileLayerOpts": null,
+      "tileLayerUrl": null,
+      "trackViewport": false,
+      "type": "mapbox",
+      "title": "Map",
+      "coordinateUnit": "decimal-degrees",
+      "latitudeField": "latitude",
+      "longitudeField": "longitude",
+      "viewport": {
+        "longitude": 14.304040114527055,
+        "latitude": 51.791182372161046,
+        "zoom": 4.163130664792186,
+        "pitch": 0,
+        "bearing": 0,
+        "padding": {
+          "top": 0,
+          "bottom": 0,
+          "left": 0,
+          "right": 0
+        }
+      }
+    }
+  },
+  "meta": {
+    "name": "PROJECT_NAME",
+    "timestamp": "TIMESTAMP",
+    "description": ""
+  },
+  "networks": {},
+  "notes": {},
+  "panes": {
+    "model": {
+      "global": {
+        "splitterSize": 2,
+        "tabEnableClose": false,
+        "tabSetHeaderHeight": 1,
+        "tabSetTabStripHeight": 1,
+        "tabSetMinWidth": 160,
+        "tabSetMinHeight": 160,
+        "borderMinSize": 160,
+        "borderBarSize": 20,
+        "borderEnableDrop": false
+      },
+      "borders": [
+        {
+          "type": "border",
+          "size": 240,
+          "location": "right",
+          "children": [
+            {
+              "type": "tab",
+              "id": "--mr-legend-pane",
+              "name": "Legend",
+              "component": "Legend",
+              "enableClose": false,
+              "enableDrag": false
+            },
+            {
+              "type": "tab",
+              "id": "--mr-selection-pane",
+              "name": "Selection",
+              "component": "Selection",
+              "enableClose": false,
+              "enableDrag": false
+            },
+            {
+              "type": "tab",
+              "id": "--mr-history-pane",
+              "name": "History",
+              "component": "History",
+              "enableClose": false,
+              "enableDrag": false
+            },
+            {
+              "type": "tab",
+              "id": "--mr-views-pane",
+              "name": "Views",
+              "component": "Views",
+              "enableClose": false,
+              "enableDrag": false
+            }
+          ]
+        }
+      ],
+      "layout": {
+        "type": "row",
+        "id": "#ce7ba5b6-abbd-474b-a0d0-77a81473d0ea",
+        "children": [
+          {
+            "type": "row",
+            "id": "#6197b964-68d1-4657-8214-64e1c98162d4",
+            "children": [
+              {
+                "type": "row",
+                "id": "#9da8cfd7-e574-4291-96ea-121b77f21f0e",
+                "weight": 64,
+                "children": [
+                  {
+                    "type": "tabset",
+                    "id": "#b327f2ad-23e4-44a9-abce-7b3dba969790",
+                    "children": [
+                      {
+                        "type": "tab",
+                        "id": "map-1",
+                        "name": "Map",
+                        "component": "Map"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "row",
+                    "id": "#70cb4fad-2e23-4630-b95f-7ff2ed8745d2",
+                    "children": [
+                      {
+                        "type": "tabset",
+                        "id": "#5d6de66a-d7ae-49d3-9961-c87452e7f176",
+                        "weight": 50,
+                        "children": [
+                          {
+                            "type": "tab",
+                            "id": "tree-1",
+                            "name": "Tree",
+                            "component": "Tree"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "tabset",
+                        "id": "#39010d69-620b-479e-a254-32ff97f6fb05",
+                        "weight": 50,
+                        "children": [
+                          {
+                            "type": "tab",
+                            "id": "tree-2",
+                            "name": "Tree",
+                            "component": "Tree"
+                          }
+                        ],
+                        "active": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tabset",
+                "id": "#270b0312-71cb-454c-a541-855b87c344c2",
+                "weight": 48,
+                "children": [
+                  {
+                    "type": "tab",
+                    "id": "timeline-1",
+                    "name": "Timeline",
+                    "component": "Timeline"
+                  },
+                  {
+                    "type": "tab",
+                    "id": "table-1",
+                    "name": "Metadata",
+                    "component": "Table"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "slicers": {},
+  "styles": {
+    "coloursField": "city",
+    "colourPalettes": [],
+    "defaultColour": "transparent",
+    "defaultShape": "circle",
+    "colourSettings": {},
+    "labelsField": null,
+    "legendDirection": "row",
+    "shapesField": null,
+    "shapePalettes": []
+  },
+  "tables": {
+    "table-1": {
+      "displayMode": "cosy",
+      "hideUnselected": false,
+      "title": "Metadata",
+      "paneId": "table-1",
+      "columns": [
+        {
+          "field": "strain",
+          "fixed": false
+        },
+        {
+          "field": "Serovar",
+          "fixed": false
+        },
+        {
+          "field": "MLST",
+          "fixed": false
+        },
+        {
+          "field": "cgMLST",
+          "fixed": false
+        },
+        {
+          "field": "HC5",
+          "fixed": false
+        },
+        {
+          "field": "HC10",
+          "fixed": false
+        },
+        {
+          "field": "region",
+          "fixed": false
+        },
+        {
+          "field": "country",
+          "fixed": false
+        },
+        {
+          "field": "division",
+          "fixed": false
+        },
+        {
+          "field": "city",
+          "fixed": false
+        },
+        {
+          "field": "date",
+          "fixed": false
+        },
+        {
+          "field": "latitude",
+          "fixed": false
+        },
+        {
+          "field": "longitude",
+          "fixed": false
+        },
+        {
+          "field": "year",
+          "fixed": false
+        },
+        {
+          "field": "month",
+          "fixed": false
+        },
+        {
+          "field": "day",
+          "fixed": false
+        }
+      ],
+      "file": "sib4"
+    }
+  },
+  "timelines": {
+    "timeline-1": {
+      "bounds": null,
+      "controls": false,
+      "nodeSize": 14,
+      "playing": false,
+      "speed": 1,
+      "laneField": null,
+      "style": "bar",
+      "unit": null,
+      "viewport": null,
+      "title": "Timeline",
+      "dataType": "year-month-day",
+      "yearField": "year",
+      "monthField": "month",
+      "dayField": "day"
+    }
+  },
+  "trees": {
+    "tree-1": {
+      "alignLabels": true,
+      "blockHeaderFontSize": 13,
+      "blockPadding": 0,
+      "blocks": [],
+      "blockSize": 14,
+      "branchLengthsDigits": 4,
+      "controls": false,
+      "fontSize": 16,
+      "hideOrphanDataRows": false,
+      "ids": null,
+      "internalLabelsFilterRange": [
+        0,
+        100
+      ],
+      "internalLabelsFontSize": 13,
+      "lasso": false,
+      "nodeSize": 14,
+      "path": null,
+      "roundBranchLengths": true,
+      "scaleLineAlpha": true,
+      "showBlockHeaders": true,
+      "showBlockLabels": false,
+      "showBranchLengths": false,
+      "showEdges": true,
+      "showInternalLabels": false,
+      "showLabels": true,
+      "showLeafLabels": false,
+      "showPiecharts": true,
+      "showShapeBorders": true,
+      "showShapes": true,
+      "styleLeafLabels": false,
+      "styleNodeEdges": false,
+      "subtreeIds": null,
+      "type": "rc",
+      "title": "Tree",
+      "labelField": "strain",
+      "file": "a8f0",
+      "highlightedId": null,
+      "fixedScale": null,
+      "zoom": 0
+    },
+    "tree-2": {
+      "alignLabels": true,
+      "blockHeaderFontSize": 13,
+      "blockPadding": 0,
+      "blocks": [],
+      "blockSize": 14,
+      "branchLengthsDigits": 4,
+      "controls": false,
+      "fontSize": 16,
+      "hideOrphanDataRows": false,
+      "ids": null,
+      "internalLabelsFilterRange": [
+        0,
+        100
+      ],
+      "internalLabelsFontSize": 13,
+      "lasso": false,
+      "nodeSize": 14,
+      "path": null,
+      "roundBranchLengths": true,
+      "scaleLineAlpha": true,
+      "showBlockHeaders": true,
+      "showBlockLabels": false,
+      "showBranchLengths": false,
+      "showEdges": true,
+      "showInternalLabels": false,
+      "showLabels": true,
+      "showLeafLabels": false,
+      "showPiecharts": true,
+      "showShapeBorders": true,
+      "showShapes": true,
+      "styleLeafLabels": false,
+      "styleNodeEdges": false,
+      "subtreeIds": null,
+      "type": "rc",
+      "title": "Tree",
+      "labelField": "strain",
+      "file": "ecd0",
+      "highlightedId": null
+    }
+  },
+  "views": [],
+  "schema": "https://microreact.org/schema/v1.json"
+}
