@@ -282,7 +282,8 @@ process add_temporal_data {
     path(tree)
     tuple path(alignment), path(metadata)// SNPs alignment would confuse timetree when estimating clock we are using initial full alignment
     output:
-    tuple path("tree3_timetree.nwk"), path("branch_lengths.json"), path("traits.json")
+    tuple path("tree3_timetree.nwk"), path("branch_lengths.json"), path("traits.json"), emit: to_auspice
+    tuple path(tree), path("tree3_rescaled.nwk"), emit: to_microreact 
     script:
     """
 
@@ -352,7 +353,10 @@ process add_temporal_data {
                  --output-node-data traits.json \\
                  --columns "country city" \\
                  --confidence
-                
+    
+    
+    # modify tree3_timetree.nwk by replacing branches length with "time distance" predicted for each leaf and internal node with timetree
+    python /opt/docker/custom_scripts/convert_nwk_to_timetree.py --tree tree3_timetree.nwk --branches branch_lengths.json --output tree3_rescaled.nwk
     """
 }
 
@@ -511,7 +515,31 @@ process metadata_for_microreact {
     
 }
 
+process prepare_microreact_json {
+    container  = params.main_image 
+    publishDir "${params.results_dir}/${params.input_prefix}/", mode: 'copy', pattern: "${params.input_prefix}_microreactproject.microreact"
+    tag "Preperaning .microreact file"
+    cpus 1
+    memory "20 GB"
+    time "1h"
+    input:
+    path("${params.input_prefix}_metadata_microreact.tsv")
+    tuple path(tree_regular), path("tree_rescaled_branches")
+    output:
+    path("${params.input_prefix}_microreactproject.microreact")
+    script:
+    """
 
+    python3 /opt/docker/custom_scripts/prepare_json_for_microreact.py --input_json /opt/docker/config/microreact_config_bacteria.microreact \
+                                                                      --classical_tree ${tree_regular} \
+                                                                      --rescaled_tree ${tree_rescaled_branches} \
+                                                                      --metadata ${params.input_prefix}_metadata_microreact.tsv \
+                                                                      --project_name ${params.input_prefix} \
+                                                                      --output ${params.input_prefix}_microreactproject.microreact
+
+    """
+
+}
 
 process save_input_to_log {
   tag "Dummy process"
@@ -580,8 +608,9 @@ add_dummy_data_out = run_dummy_refine(restore_identical_sequences_out.tree, augu
 
 metadata_for_microreact_out = metadata_for_microreact(generate_colors_for_features_out, metadata_channel)
 
-visualize_tree_out_1 = visualize_tree_1(add_temporal_data_out, generate_colors_for_features_out, metadata_channel, "timetree")
+visualize_tree_out_1 = visualize_tree_1(add_temporal_data_out.to_auspice, generate_colors_for_features_out, metadata_channel, "timetree")
 visualize_tree_out_2 = visualize_tree_2(add_dummy_data_out, generate_colors_for_features_out, metadata_channel, "regulartree")
 // save_input_to_log(gff_input)
 
+prepare_microreact_json_out = prepare_microreact_json(metadata_for_microreact_out, add_temporal_data_out.to_microreact)
 }

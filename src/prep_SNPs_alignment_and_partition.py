@@ -209,7 +209,7 @@ def main(input_fasta, input_fasta_annotation, model, output_fasta, max_gap, outp
             # partition ha one entry
             STAM_correction = f"ASC_STAM{{{'/'.join(map(str, global_STAM_values))}}}"
             last_gen = gen_list[-1]
-            output_handle.write(f"{model}+{STAM_correction}, full_genome=1-{partition_dict[last_gen][1]}\n")
+            output_handle.write(f"{model}+{STAM_correction}, full_genome=1-{old_end}\n")
 
 
     #  Obsole, added ASM for each gene partition file
