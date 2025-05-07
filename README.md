@@ -39,5 +39,6 @@ The `metadata.txt` file must be a tab-separated file with the following **requir
 
 ### Naming Scheme
 
-If the input files in the `fastas/` directory are named like `ERRXYZ.fasta`, the program will convert them to GFF format using Prokka. The resulting GFF files will be named `ERRXYZ_prokka.gff`. As a result, when using FASTA input, the `strain` column in the metadata must match the GFF filenames, i.e., it should be `ERRXYZ_prokka`. If the input type is already GFF (i.e., files are named like `ERRXYZ.gff`), then the `strain` column can simply match the name of the file without gff extension e.g.`ERRXYZ`.
-
+The input files can be either in FASTA or GFF format. If FASTA files are provided, the program will convert them to GFF format using **Prokka**.
+The `strain` column in metadata, regardless of the input type, **must exactly match** the filename (without the extension).  
+For example, for a file named `ERRXYZ.fasta`, the corresponding strain name must be `ERRXYZ`.

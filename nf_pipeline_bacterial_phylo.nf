@@ -55,7 +55,7 @@ process run_prokka {
   input:
   tuple val(x), path(fasta)
   output:
-  path("${x}_prokka.gff")
+  path("${x}.gff")
   script:
   """
   prokka --metagenome --cpus ${task.cpus} --outdir prokka_out --prefix prokka_out --compliant --kingdom Bacteria $fasta
@@ -63,8 +63,8 @@ process run_prokka {
             \\"prokka_gff\\": \\"${params.results_dir}/${x}/${x}_prokka.gff\\", \
             \\"prokka_ffn\\": \\"${params.results_dir}/${x}/${x}_prokka.ffn\\"}" >> prokka.json
   # Following files are usefull for phylogenetic analyis
-  mv prokka_out/prokka_out.gff ${x}_prokka.gff
-  mv prokka_out/prokka_out.ffn ${x}_prokka.ffn
+  mv prokka_out/prokka_out.gff ${x}.gff
+  mv prokka_out/prokka_out.ffn ${x}.ffn
 
   """
 }

@@ -62,6 +62,44 @@ def reintroduce_identical_sequences(tree_file: str, input_mapping:str, prefix:st
     tree.write(outfile=out_file, format=2)
     return out_file
 
+def reintroduce_identical_sequences_leaf_to_node(tree_file: str, input_mapping: str, prefix: str) -> str:
+    """Reintroduce identical sequences as children of a new zero-length node replacing the original leaf."""
+    identical_sequences = read_input_mapping(input_mapping)
+    tree = Tree(tree_file, format=2)
+
+    for main_id, identicals in identical_sequences.items():
+        target_nodes = tree.search_nodes(name=main_id)
+        if not target_nodes:
+            print(f"Warning: Node '{main_id}' not found in tree.")
+            continue
+
+        target = target_nodes[0]
+        parent = target.up
+
+        if not parent:
+            print(f"Warning: Node '{main_id}' has no parent (might be root)")
+            continue
+
+        # Create a new intermediate node to replace the original target
+        new_internal = Tree()
+        new_internal.dist = target.dist
+        new_internal.support = target.support
+
+        # Create zero-distance leaves for all sequences
+        all_ids = [main_id] + identicals
+        for seq_id in all_ids:
+            child = new_internal.add_child(name=seq_id)
+            child.dist = 0.0
+
+        # Replace original node with new internal node
+        new_internal.name = ""  # optional: give it no name
+        parent.remove_child(target)
+        parent.add_child(new_internal)
+
+    out_file = prefix + "_reintroduced_identical_sequences.nwk"
+    tree.write(outfile=out_file, format=2)
+    return out_file
+
 
 @click.command()
 @click.option('--input_mapping', help='[INPUT] output of find_identical_seqences.py, each row represents'
@@ -84,9 +122,14 @@ def main_function(input_mapping, input_tree, collapse ,collapse_value, root, out
         input_tree = collapse_weak_nodes(tree_file=input_tree,
                                          prefix=output_prefix,
                                          support_threshold=collapse_value)
-    reintroduce_identical_sequences(tree_file=input_tree,
-                                    input_mapping=input_mapping,
-                                    prefix=output_prefix)
+
+    reintroduce_identical_sequences_leaf_to_node(tree_file=input_tree,
+                                                 input_mapping=input_mapping,
+                                                 prefix=output_prefix)
+    
+    #reintroduce_identical_sequences(tree_file=input_tree,
+    #                                input_mapping=input_mapping,
+    #                                prefix=output_prefix)
     return True
 
 if __name__ == "__main__":
