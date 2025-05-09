@@ -1,5 +1,6 @@
 input_fasta = file(params.input_fasta)
 metadata = file(params.metadata)
+organism = params.organism
 
 src_dir = "${baseDir}/src"
 
@@ -15,7 +16,7 @@ include { insert_duplicates_into_alignment } from './modules/insert_duplicates_i
 include { treetime } from './modules/treetime.nf'
 include { augur_export } from './modules/augur_export.nf'
 
-workflow {
+workflow core {
     augur_index_sequences(input_fasta)
     identify_low_quality_sequences(augur_index_sequences.out)
     augur_filter_sequences(input_fasta, augur_index_sequences.out, metadata, identify_low_quality_sequences.out)
@@ -28,4 +29,14 @@ workflow {
     augur_export(treetime.out.timetree, metadata, treetime.out.node_data)
 }
 
-
+workflow {
+    if (organism.toLowerCase() in ['sars', 'sars2', 'sars-cov-2']) {
+        core()
+    }
+    else if (organism.toLowerCase() in ['flu', 'influenza']) {
+        error "Influenza workflow is not implemented yet."
+    }
+    else {
+        error "Organism not supported. Please use 'sars-cov-2' or 'influenza'."
+    }
+}
