@@ -15,7 +15,9 @@ RUN python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install nextstrain-augur \
-        Biopython
+
+RUN pip install nextstrain-augur biopython click Biopython
 
 COPY data/auspice_config.json /etc/auspice/auspice_config.json
+RUN mkdir -p /opt/docker/
+COPY bin/* /opt/docker/
