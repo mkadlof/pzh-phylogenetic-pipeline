@@ -2,7 +2,7 @@
 // 1. A single FASTA file containing sequences - for single segment viruses like SARS-CoV-2
 // 2. A directory containing multiple FASTA files - for multi-segment viruses like Influenza
 
-input_fasta = file(params.input_fasta) // This var is overloaded (dir or file)
+input_fasta_g = file(params.input_fasta) // This var is overloaded (dir or file)
 metadata = file(params.metadata)
 organism = params.organism
 
@@ -26,6 +26,11 @@ include { augur_export } from './modules/augur_export.nf'
 include { transform_input } from './modules/transform_input.nf'
 
 workflow core {
+    take:
+    input_fasta
+    metadata
+
+    main:
     augur_index_sequences(input_fasta)
     identify_low_quality_sequences(augur_index_sequences.out)
     augur_filter_sequences(input_fasta, augur_index_sequences.out, metadata, identify_low_quality_sequences.out)
@@ -38,17 +43,20 @@ workflow core {
     augur_export(treetime.out.timetree, metadata, treetime.out.node_data)
 }
 
+def transformed
+
 workflow {
     if (organism.toLowerCase() in ['sars', 'sars2', 'sars-cov-2']) {
-        core()
+        core(input_fasta_g, metadata)
     }
     else if (organism.toLowerCase() in ['flu', 'infl','influenza']) {
-        transform_input(input_fasta)
+        transformed = transform_input(input_fasta_g)
+        core(transformed.fastas, metadata)
     }
     else if (organism.toLowerCase() in ['rsv']) {
         error "RSV is not supported yet. Please use 'sars-cov-2' or 'influenza'."
     }
     else {
-        error "Organism not supported. Please use 'sars-cov-2' or 'influenza'."
+        error "Organism not supported. Please use 'sars-cov-2', 'influenza' or 'rsv'."
     }
 }
