@@ -1,8 +1,14 @@
-input_fasta = file(params.input_fasta)
+// input can be one of the following:
+// 1. A single FASTA file containing sequences - for single segment viruses like SARS-CoV-2
+// 2. A directory containing multiple FASTA files - for multi-segment viruses like Influenza
+
+input_fasta = file(params.input_fasta) // This var is overloaded (dir or file)
 metadata = file(params.metadata)
 organism = params.organism
 
 src_dir = "${baseDir}/src"
+
+// Core modules
 
 include { augur_index_sequences } from './modules/augur_index_sequences.nf'
 include { identify_low_quality_sequences } from './modules/identify_low_quality_sequences.nf'
@@ -15,6 +21,9 @@ include { insert_duplicates_into_tree } from './modules/insert_duplicates_into_t
 include { insert_duplicates_into_alignment } from './modules/insert_duplicates_into_alignment.nf'
 include { treetime } from './modules/treetime.nf'
 include { augur_export } from './modules/augur_export.nf'
+
+// influenza specific modules
+include { transform_input } from './modules/transform_input.nf'
 
 workflow core {
     augur_index_sequences(input_fasta)
@@ -33,8 +42,11 @@ workflow {
     if (organism.toLowerCase() in ['sars', 'sars2', 'sars-cov-2']) {
         core()
     }
-    else if (organism.toLowerCase() in ['flu', 'influenza']) {
-        error "Influenza workflow is not implemented yet."
+    else if (organism.toLowerCase() in ['flu', 'infl','influenza']) {
+        transform_input(input_fasta)
+    }
+    else if (organism.toLowerCase() in ['rsv']) {
+        error "RSV is not supported yet. Please use 'sars-cov-2' or 'influenza'."
     }
     else {
         error "Organism not supported. Please use 'sars-cov-2' or 'influenza'."
