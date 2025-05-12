@@ -1,22 +1,21 @@
 process transform_input {
+    container = params.main_image
+    tag "Concatanating data"
+    cpus 1
+    memory "30 GB"
+    time "1h"
     input:
-    path input_dir
-
+    path(x) 
+    output:
+    tuple path("HA.fasta"), path("NA.fasta"), path("PB1.fasta")
     script:
     """
-    # Read segments in the first sample directory
-    segments=(\$(ls -1 "\$(ls -d ${input_dir}/*/ | head -n1)" ))
-
-    samples=(\$(ls -d ${input_dir}/*/))
-
-    for segment in \${segments[@]}; do
-        # Create empty fasta for segment
-        touch \${segment}
-
-        # Concatenate all samples for this segment
-        for sample in \${samples[@]}; do
-            cat "\${sample}\${segment}" >> \${segment}
-        done
-    done
+    # Extract fasta file from input fasta 
+    python3 /opt/docker/extract_segment.py --input_dir . --segment_name HA
+    python3 /opt/docker/extract_segment.py --input_dir . --segment_name NA
+    python3 /opt/docker/extract_segment.py --input_dir . --segment_name PB1
+    # and so on ...
     """
 }
+
+
