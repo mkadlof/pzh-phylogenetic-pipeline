@@ -51,7 +51,7 @@ workflow {
     }
     else if (organism.toLowerCase() in ['flu', 'infl','influenza']) {
         transformed = transform_input(input_fasta_g)
-        core(transformed.fastas, metadata)
+        core(transformed.fastas.flatten(), metadata)
     }
     else if (organism.toLowerCase() in ['rsv']) {
         error "RSV is not supported yet. Please use 'sars-cov-2' or 'influenza'."
