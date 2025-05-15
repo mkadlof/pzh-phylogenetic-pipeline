@@ -4,14 +4,6 @@ process transform_input {
 
     output:
     path "*.fasta", emit: fastas
-//    tuple val("PB2"), path("PB2.fasta")
-//    tuple val("PB1"), path("PB1.fasta")
-//    tuple val("PA"),  path("PA.fasta")
-//    tuple val("HA"),  path("HA.fasta")
-//    tuple val("NP"),  path("NP.fasta")
-//    tuple val("NA"),  path("NA.fasta")
-//    tuple val("MP"),  path("MP.fasta")
-//    tuple val("NS"),  path("NS.fasta")
 
     script:
     """

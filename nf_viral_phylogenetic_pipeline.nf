@@ -24,6 +24,7 @@ include { augur_export } from './modules/augur_export.nf'
 
 // influenza specific modules
 include { transform_input } from './modules/transform_input.nf'
+include { adjust_metadata } from './modules/adjust_metadata.nf'
 
 workflow core {
     take:
@@ -51,7 +52,8 @@ workflow {
     }
     else if (organism.toLowerCase() in ['flu', 'infl','influenza']) {
         transformed = transform_input(input_fasta_g)
-        core(transformed.fastas.flatten(), metadata)
+        adjusted_metadata = adjust_metadata(metadata)
+        core(transformed.fastas.flatten(), adjusted_metadata)
     }
     else if (organism.toLowerCase() in ['rsv']) {
         error "RSV is not supported yet. Please use 'sars-cov-2' or 'influenza'."
