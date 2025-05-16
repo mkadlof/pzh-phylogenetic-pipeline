@@ -1,10 +1,9 @@
 process insert_duplicates_into_tree {
     input:
-    path tree
-    path ids
+    tuple val(segmentId), path(tree), path(ids)
 
     output:
-    path "consensus_tree.nwk"
+    tuple val(segmentId), path("consensus_tree.nwk")
 
     script:
     """

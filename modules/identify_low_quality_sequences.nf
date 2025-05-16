@@ -1,9 +1,9 @@
 process identify_low_quality_sequences {
     input:
-    path index_csv
+    tuple val(segmentId), path(index_csv)
 
     output:
-    path "invalid_strains.txt", emit: out
+    tuple val(segmentId), path("invalid_strains.txt"), emit: out
 
     script:
     """

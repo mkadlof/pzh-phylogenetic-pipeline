@@ -34,26 +34,32 @@ workflow core {
     main:
     augur_index_sequences(input_fasta)
     identify_low_quality_sequences(augur_index_sequences.out)
-    augur_filter_sequences(input_fasta, augur_index_sequences.out, metadata, identify_low_quality_sequences.out)
+    c1 = input_fasta.join(augur_index_sequences.out.sequence_index).join(identify_low_quality_sequences.out)
+    augur_filter_sequences(c1, metadata)
     find_identical_sequences(augur_filter_sequences.out)
     augur_align(find_identical_sequences.out.uniq_fasta)
     iqtree(augur_align.out)
-    insert_duplicates_into_tree(iqtree.out, find_identical_sequences.out.duplicated_ids)
-    insert_duplicates_into_alignment(augur_align.out, find_identical_sequences.out.duplicated_ids)
-    treetime(insert_duplicates_into_alignment.out, metadata, insert_duplicates_into_tree.out)
-    augur_export(treetime.out.timetree, metadata, treetime.out.node_data)
+    c2 = iqtree.out.join(find_identical_sequences.out.duplicated_ids)
+    insert_duplicates_into_tree(c2)
+    c3 = augur_align.out.join(find_identical_sequences.out.duplicated_ids)
+    insert_duplicates_into_alignment(c3)
+    c4 = insert_duplicates_into_alignment.out.join(insert_duplicates_into_tree.out)
+    treetime(c4, metadata)
+    augur_export(treetime.out, metadata)
 }
 
 def transformed
 
 workflow {
     if (organism.toLowerCase() in ['sars', 'sars2', 'sars-cov-2']) {
-        core(input_fasta_g, metadata)
+        ch = Channel.fromPath(input_fasta_g).map { file -> tuple(file.baseName, file) }
+//        input_fasta_g = input_fasta_g.flatten().map { file -> tuple(file.baseName, file) } // Channel of tuples of (segmentId, fasta) (Channel<Tuple<String, Path>>)
+        core(ch, metadata)
     }
     else if (organism.toLowerCase() in ['flu', 'infl','influenza']) {
-        transformed = transform_input(input_fasta_g)
+        transformed = transform_input(input_fasta_g).fastas.flatten().map { file -> tuple(file.baseName, file) } // Channel of tuples of (segmentId, fasta) (Channel<Tuple<String, Path>>)
         adjusted_metadata = adjust_metadata(metadata)
-        core(transformed.fastas.flatten(), adjusted_metadata)
+        core(transformed, adjusted_metadata)
     }
     else if (organism.toLowerCase() in ['rsv']) {
         error "RSV is not supported yet. Please use 'sars-cov-2' or 'influenza'."

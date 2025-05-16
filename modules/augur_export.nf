@@ -1,8 +1,7 @@
 process augur_export {
     input:
-    path tree
+    tuple val(segmentId), path(tree), path(node_data)
     path metadata
-    path node_data
 
     output:
     path "auspice.json", emit: out

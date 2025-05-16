@@ -1,12 +1,10 @@
 process treetime {
     input:
-    path alignment
+    tuple val(segmentId), path(alignment), path(tree)
     path metadata
-    path tree
 
     output:
-    path "timetree.nwk", emit: timetree
-    path "*.node_data.json", emit: node_data
+    tuple val(segmentId), path("timetree.nwk"), path("*.node_data.json")
 
     script:
     """

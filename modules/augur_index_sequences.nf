@@ -1,9 +1,9 @@
 process augur_index_sequences {
     input:
-    path fasta
+    tuple val(segmentId), path(fasta)
 
     output:
-    path "sequence-index.csv", emit: sequence_index
+    tuple val(segmentId), path("sequence-index.csv"), emit: sequence_index
 
     script:
     """

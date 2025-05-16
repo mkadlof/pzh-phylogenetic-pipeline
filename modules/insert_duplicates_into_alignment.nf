@@ -1,10 +1,9 @@
 process insert_duplicates_into_alignment {
     input:
-    path alignment
-    path ids
+    tuple val(segmentId), path(alignment), path(ids)
 
     output:
-    path "alignment_with_duplicates.fasta", emit: out
+    tuple val(segmentId), path("alignment_with_duplicates.fasta")
 
     script:
     """

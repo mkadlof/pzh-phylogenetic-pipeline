@@ -3,11 +3,10 @@ process adjust_metadata {
     path metadata
 
     output:
-    path "adjusted_metadata.tsv", emit: adjusted_metadata
+    path "influenza_metadata_adjusted.tsv", emit: adjusted_metadata
 
     script:
     """
-    # Module to be implementd.
-    cat ${metadata} > adjusted_metadata.tsv
+    adjust_metadata.py ${metadata}
     """
 }

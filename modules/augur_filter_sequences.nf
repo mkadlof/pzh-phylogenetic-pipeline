@@ -1,12 +1,10 @@
 process augur_filter_sequences {
     input:
-    path fasta
-    path index_csv
+    tuple val(segmentId), path(fasta), path(index_csv), path(exclude)
     path metadata
-    path exclude
 
     output:
-    path "valid_strains.fasta", emit: out
+    tuple val(segmentId), path("valid_strains.fasta")
 
     script:
     """

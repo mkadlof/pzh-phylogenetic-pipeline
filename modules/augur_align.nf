@@ -1,9 +1,9 @@
 process augur_align {
     input:
-    path fasta
+    tuple val(segmentId), path(fasta)
 
     output:
-    path "aligned.fasta", emit: out
+    tuple val(segmentId), path("aligned.fasta"), emit: out
 
     script:
     """

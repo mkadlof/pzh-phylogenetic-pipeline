@@ -1,9 +1,9 @@
 process iqtree {
     input:
-    path aln
+    tuple val(segmentId), path(aln)
 
     output:
-    path "${aln}.contree", emit: out
+    tuple val(segmentId), path("${aln}.contree"), emit: out
 
     script:
     """
