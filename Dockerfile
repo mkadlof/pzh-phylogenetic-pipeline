@@ -13,9 +13,10 @@ RUN apt update -y && apt install --no-install-recommends -y \
 
 RUN python3 -m venv /opt/venv
 
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH:/opt/scripts:$PATH"
 
 RUN pip install nextstrain-augur \
         Biopython
 
+COPY bin/* /opt/scripts/
 COPY data/auspice_config.json /etc/auspice/auspice_config.json
