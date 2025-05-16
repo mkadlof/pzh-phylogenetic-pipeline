@@ -1,5 +1,8 @@
 process insert_duplicates_into_alignment {
     tag "${segmentId}"
+    cpus 1
+    memory "30 GB"
+    time "1h"
     input:
     tuple val(segmentId), path(alignment), path(ids)
 

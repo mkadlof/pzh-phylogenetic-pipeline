@@ -1,4 +1,7 @@
 process adjust_metadata {
+    cpus 1
+    memory "30 GB"
+    time "1h"
     input:
     path metadata
 

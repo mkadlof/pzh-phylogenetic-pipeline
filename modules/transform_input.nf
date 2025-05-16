@@ -1,4 +1,7 @@
 process transform_input {
+    cpus 1
+    memory "30 GB"
+    time "1h"
     input:
     path input_dir
 

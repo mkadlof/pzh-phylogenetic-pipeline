@@ -1,5 +1,8 @@
 process remove_duplicates_from_alignment {
     tag "${segmentId}"
+    cpus 1
+    memory "30 GB"
+    time "1h"
     input:
     path alignment
     path duplicated_ids

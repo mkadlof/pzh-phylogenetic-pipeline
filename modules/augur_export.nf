@@ -1,5 +1,8 @@
 process augur_export {
     tag "${segmentId}"
+    cpus 1
+    memory "30 GB"
+    time "1h"
     input:
     tuple val(segmentId), path(tree), path(node_data)
     path metadata

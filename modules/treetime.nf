@@ -1,5 +1,8 @@
 process treetime {
     tag "${segmentId}"
+    cpus 1
+    memory "30 GB"
+    time "1h"
     input:
     tuple val(segmentId), path(alignment), path(tree)
     path metadata
