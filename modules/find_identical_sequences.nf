@@ -1,4 +1,5 @@
 process find_identical_sequences {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(fasta)
 

@@ -1,4 +1,5 @@
 process augur_align {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(fasta)
 

@@ -1,4 +1,5 @@
 process insert_duplicates_into_tree {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(tree), path(ids)
 

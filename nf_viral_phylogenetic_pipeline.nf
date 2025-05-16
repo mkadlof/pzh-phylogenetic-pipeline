@@ -6,6 +6,9 @@ input_fasta_g = file(params.input_fasta) // This var is overloaded (dir or file)
 metadata = file(params.metadata)
 organism = params.organism
 
+params.threshold_Ns = 0.02
+params.threshold_ambiguities = 0.0
+
 src_dir = "${baseDir}/src"
 
 // Core modules

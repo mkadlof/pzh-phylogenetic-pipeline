@@ -1,4 +1,5 @@
 process treetime {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(alignment), path(tree)
     path metadata

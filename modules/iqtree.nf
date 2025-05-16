@@ -1,4 +1,5 @@
 process iqtree {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(aln)
 

@@ -1,4 +1,5 @@
 process augur_filter_sequences {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(fasta), path(index_csv), path(exclude)
     path metadata

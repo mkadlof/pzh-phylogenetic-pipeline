@@ -1,4 +1,5 @@
 process insert_duplicates_into_alignment {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(alignment), path(ids)
 

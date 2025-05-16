@@ -1,4 +1,5 @@
 process augur_index_sequences {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(fasta)
 

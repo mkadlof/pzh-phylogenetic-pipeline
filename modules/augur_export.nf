@@ -1,4 +1,5 @@
 process augur_export {
+    tag "${segmentId}"
     input:
     tuple val(segmentId), path(tree), path(node_data)
     path metadata

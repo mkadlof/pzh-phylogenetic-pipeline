@@ -1,4 +1,5 @@
 process remove_duplicates_from_alignment {
+    tag "${segmentId}"
     input:
     path alignment
     path duplicated_ids
