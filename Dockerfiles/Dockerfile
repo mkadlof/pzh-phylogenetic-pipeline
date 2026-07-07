@@ -49,13 +49,16 @@ RUN ln -s python3 python
 # Bacterial: RAxML-NG pinned specific version
 # ---------------------------
 WORKDIR /opt/docker
-RUN git clone --recursive https://github.com/amkozlov/raxml-ng && \
+WORKDIR /opt/docker
+
+RUN git clone https://github.com/amkozlov/raxml-ng && \
     cd raxml-ng && \
     git checkout 805318cef87bd5d67064efa299b5d1cf948367fd && \
+    git submodule update --init --recursive && \
     mkdir build && cd build && \
     cmake .. && \
-    make -j 4 && make install && \
-    cd /opt/docker
+    make -j 4 && \
+    make install
 
 # ---------------------------
 # Bacterial: IQtree2 v. 2.4.0
