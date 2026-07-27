@@ -174,17 +174,19 @@ if [ ! -d "${db_absolute_path_on_host}" ]; then
     echo "Błąd: katalog z zewnetrznymi bazami '$db_absolute_path_on_host' nie istnieje."; exit 1
 fi
 
-# 2. Check if Docker images exist locally
-if ! docker image inspect "$main_image" > /dev/null 2>&1; then
-    echo "Błąd: obraz Docker '$main_image' nie istnieje lokalnie."; exit 1
-fi
-if ! docker image inspect "$prokka_image" > /dev/null 2>&1; then
-    echo "Błąd: obraz Docker '$prokka_image' nie istnieje lokalnie."; exit 1
-fi
-
-# 3. Validate profile
+# 2. Validate profile
 if [[ "$profile" != "local" && "$profile" != "slurm" ]]; then
     echo "Błąd: nieprawidłowy profil Nextflow: '$profile'. Dozwolone: 'local', 'slurm'."; exit 1
+fi
+
+# 3. Check Docker images only for local execution
+if [[ "$profile" != "slurm" ]]; then
+    if ! docker image inspect "$main_image" > /dev/null 2>&1; then
+        echo "Błąd: obraz Docker '$main_image' nie istnieje lokalnie."; exit 1
+    fi
+    if ! docker image inspect "$prokka_image" > /dev/null 2>&1; then
+        echo "Błąd: obraz Docker '$prokka_image' nie istnieje lokalnie."; exit 1
+    fi
 fi
 
 # 4. Validate genus
