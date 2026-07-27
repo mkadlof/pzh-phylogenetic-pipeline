@@ -98,6 +98,19 @@ def test_calculate_distance_matrix_real_data(tmp_path):
     assert dist[6, 7] == 8
 
 
+def test_calculate_distance_matrix_caps_workers_to_profile_count():
+    """Ensure more requested workers than profiles do not create empty jobs."""
+    mat = np.array([
+        ["1", 1.0, 2.0],
+        ["2", 2.0, 3.0],
+    ], dtype=object)
+
+    dist = calculte_distance_matrix(mat, cpus=3)
+
+    assert dist.shape == (2, 2)
+    assert np.array_equal(np.diag(dist), np.zeros(2, dtype=np.int16))
+
+
 def test_visualize_mst_runs(tmp_path):
     """Ensure MST visualization runs and produces an HTML file."""
     edges = np.array([["A", "B", 1], ["B", "C", 2]], dtype=object)

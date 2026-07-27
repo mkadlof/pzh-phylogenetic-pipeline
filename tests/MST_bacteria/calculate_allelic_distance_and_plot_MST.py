@@ -41,6 +41,12 @@ def calculate_distance(mat: np.ndarray, start_row: int, end_row: int, allowed_mi
 def calculte_distance_matrix(mat: np.ndarray, cpus: int = 1, allowed_missing: float = 0.05) -> np.ndarray:
     """Compute the full N×N allelic distance matrix for a given profile matrix."""
     n_samples = mat.shape[0]
+    if n_samples == 0:
+        raise ValueError("Cannot calculate distances without cgMLST profiles.")
+    if cpus < 1:
+        raise ValueError("The number of CPU threads must be at least 1.")
+
+    cpus = min(cpus, n_samples)
     distance_matrix = np.zeros((n_samples, n_samples), dtype=np.int16)
     row_splits = np.array_split(np.arange(n_samples), cpus)
 

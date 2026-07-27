@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-07-28
+### Fixed
+- Limit MST distance-calculation workers to the number of resolved cgMLST profiles.
+
 ## [1.0.2] - 2026-07-27
 ### Changed
 - Skip local CPU-count validation when the `slurm` execution profile is selected.
