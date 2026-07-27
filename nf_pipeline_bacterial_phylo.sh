@@ -200,9 +200,15 @@ if [[ "$inputType" != "fasta" && "$inputType" != "gff" ]]; then
 fi
 
 # 6. Validate thread count
-max_cpus=$(nproc)
-if ! [[ "$threads" =~ ^[0-9]+$ ]] || [ "$threads" -le 0 ] || [ "$threads" -gt "$max_cpus" ]; then
-    echo "Błąd: liczba wątków '$threads' jest nieprawidłowa. Dozwolone wartości: od 1 do $max_cpus."; exit 1
+if ! [[ "$threads" =~ ^[0-9]+$ ]] || [ "$threads" -le 0 ]; then
+    echo "Błąd: liczba wątków '$threads' jest nieprawidłowa. Musi być dodatnią liczbą całkowitą."; exit 1
+fi
+
+if [[ "$profile" != "slurm" ]]; then
+    max_cpus=$(nproc)
+    if [ "$threads" -gt "$max_cpus" ]; then
+        echo "Błąd: liczba wątków '$threads' jest nieprawidłowa. Dozwolone wartości: od 1 do $max_cpus."; exit 1
+    fi
 fi
 
 if [ $((threads % 12)) -ne 0 ]; then

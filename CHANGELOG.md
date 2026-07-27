@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-07-27
+### Changed
+- Skip local CPU-count validation when the `slurm` execution profile is selected.
+
 ## [1.0.1] - 2026-07-27
 ### Changed
 - Skip local Docker image validation when the `slurm` execution profile is selected.
