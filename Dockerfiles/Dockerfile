@@ -39,6 +39,7 @@ RUN pip install ete3==3.1.3 \
                 click==8.1.8 \
                 requests==2.32.3 \
                 Biopython==1.85 \
+                networkx==3.6.1 \
                 pandas==2.3.0 \
                 plotly==6.3.0
 

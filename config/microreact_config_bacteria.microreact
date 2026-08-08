@@ -28,6 +28,13 @@
       "id": "ecd0",
       "name": "rescaled_tree.nwk",
       "type": "tree"
+    },
+    "mst0": {
+      "blob": "data:application/octet-stream;base64, BLOB",
+      "format": "text/x-nh",
+      "id": "mst0",
+      "name": "mst_tree.nwk",
+      "type": "tree"
     }
   },
   "filters": {
@@ -179,12 +186,12 @@
                       {
                         "type": "tabset",
                         "id": "#5d6de66a-d7ae-49d3-9961-c87452e7f176",
-                        "weight": 50,
+                        "weight": 33,
                         "children": [
                           {
                             "type": "tab",
                             "id": "tree-1",
-                            "name": "Tree",
+                            "name": "Phylogenetic tree",
                             "component": "Tree"
                           }
                         ]
@@ -192,16 +199,29 @@
                       {
                         "type": "tabset",
                         "id": "#39010d69-620b-479e-a254-32ff97f6fb05",
-                        "weight": 50,
+                        "weight": 33,
                         "children": [
                           {
                             "type": "tab",
                             "id": "tree-2",
-                            "name": "Tree",
+                            "name": "Time tree",
                             "component": "Tree"
                           }
                         ],
                         "active": true
+                      },
+                      {
+                        "type": "tabset",
+                        "id": "#a2bb5474-f724-41f5-9bb8-7ecf41648154",
+                        "weight": 34,
+                        "children": [
+                          {
+                            "type": "tab",
+                            "id": "tree-3",
+                            "name": "cgMLST MST",
+                            "component": "Tree"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -373,7 +393,7 @@
       "styleNodeEdges": false,
       "subtreeIds": null,
       "type": "rc",
-      "title": "Tree",
+      "title": "Phylogenetic tree",
       "labelField": "strain",
       "file": "a8f0",
       "highlightedId": null,
@@ -415,10 +435,52 @@
       "styleNodeEdges": false,
       "subtreeIds": null,
       "type": "rc",
-      "title": "Tree",
+      "title": "Time tree",
       "labelField": "strain",
       "file": "ecd0",
       "highlightedId": null
+    },
+    "tree-3": {
+      "alignLabels": true,
+      "blockHeaderFontSize": 13,
+      "blockPadding": 0,
+      "blocks": [],
+      "blockSize": 14,
+      "branchLengthsDigits": 0,
+      "controls": false,
+      "fontSize": 16,
+      "hideOrphanDataRows": false,
+      "ids": null,
+      "internalLabelsFilterRange": [
+        0,
+        100
+      ],
+      "internalLabelsFontSize": 13,
+      "lasso": false,
+      "nodeSize": 14,
+      "path": null,
+      "roundBranchLengths": true,
+      "scaleLineAlpha": true,
+      "showBlockHeaders": true,
+      "showBlockLabels": false,
+      "showBranchLengths": true,
+      "showEdges": true,
+      "showInternalLabels": false,
+      "showLabels": true,
+      "showLeafLabels": false,
+      "showPiecharts": true,
+      "showShapeBorders": true,
+      "showShapes": true,
+      "styleLeafLabels": false,
+      "styleNodeEdges": false,
+      "subtreeIds": null,
+      "type": "rc",
+      "title": "cgMLST minimum spanning tree",
+      "labelField": "strain",
+      "file": "mst0",
+      "highlightedId": null,
+      "fixedScale": null,
+      "zoom": 0
     }
   },
   "views": [],
