@@ -67,9 +67,13 @@ def calculte_distance_matrix(mat: np.ndarray, cpus: int = 1, allowed_missing: fl
 
 def calculate_mst(distance_matrix: np.ndarray, labels: list[str]) -> np.ndarray:
     """Compute the Minimum Spanning Tree (MST) from the allelic distance matrix."""
-    mat = np.triu(distance_matrix, 1)
-    mst = minimum_spanning_tree(mat).toarray().astype(int)
-    edges = [(labels[i], labels[j], int(mst[i, j]))
+    # scipy interprets a zero weight as a missing edge, which would disconnect
+    # sequence types whose allelic distance rounds down to zero. Offsetting every
+    # candidate edge by one keeps the graph spanning without changing which edges
+    # are optimal, so the offset is removed again from the reported distances.
+    mat = np.triu(distance_matrix.astype(np.int64) + 1, 1)
+    mst = minimum_spanning_tree(mat).toarray().astype(np.int64)
+    edges = [(labels[i], labels[j], int(mst[i, j]) - 1)
              for i in range(mst.shape[0]) for j in range(mst.shape[1]) if mst[i, j] > 0]
     return np.array(edges, dtype=object)
 
@@ -131,7 +135,9 @@ def visualize_mst(edges: np.ndarray, counts: dict[str, int],
     G = nx.Graph()
     for s, t, d in edges:
         # print(f'{s}\t{t}\t{d}')
-        G.add_edge(s, t, weight=min(d, 50), true_weight=d)
+        # Layout weights are clamped from below so that sequence types separated by
+        # zero allelic differences do not collapse onto each other.
+        G.add_edge(s, t, weight=min(max(d, 1), 50), true_weight=d)
 
     # Optimize position of nodes
     pos = nx.kamada_kawai_layout(G, weight="weight")
