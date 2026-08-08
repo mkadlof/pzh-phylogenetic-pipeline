@@ -40,7 +40,7 @@ Quick start
     ```
    Expected outputs of these scripts can also be found under: `data/example_data/end-2-end/`. 
 
-   Note: `run_example_influenza.sh` and `run_example_rsv.sh` use `slurm` executor, modify these files if you want to use `local` executor. For `run_example_salmonella.sh` the variable PATH_TO_EXTERNAL_DATABASES must be set manually.
+   Note: `run_example_influenza.sh` and `run_example_rsv.sh` use `slurm` executor, modify these files if you want to use `local` executor. `run_example_salmonella.sh` points `PATH_TO_EXTERNAL_DATABASES` at the shared `/mnt/unity_nfs/external_databases`; adjust it if your databases live elsewhere.
    
 
 8. [Optional] Validate example outputs with pytest. Default outputs of the example scripts are in `results/test_*` directories.
@@ -208,7 +208,7 @@ Follow these steps to run the pipeline with minimal setup:
 2. Copy the `nf_pipeline_bacterial_phylo.sh` script from the repository’s root directory into your working directory.
 3. (Optional) Copy a valid metadata file e.g. `metadata_salmonella.txt` file and a `fastas/` directory with uncompressed genome FASTA files into the working directory.  Example files are available in the `data/example_data/salmonella` directory of the repository.
 
-Assuming your working directory contains `metadata_salmonella.txt` and a `fastas/` directory, cloned this repo to `/home/my_user/plepiseq-phylogenetic-pipeline`, and you’ve built/pulled the required Docker images as described in Quick Start section, and external databases are located in `/mnt/external_databases` run:
+Assuming your working directory contains `metadata_salmonella.txt` and a `fastas/` directory, cloned this repo to `/home/my_user/plepiseq-phylogenetic-pipeline`, and you’ve built/pulled the required Docker images as described in Quick Start section, and external databases are located in `/mnt/unity_nfs/external_databases` run:
 
 ```bash
 bash nf_pipeline_bacterial_phylo.sh --metadata metadata_salmonella.txt \
@@ -217,8 +217,10 @@ bash nf_pipeline_bacterial_phylo.sh --metadata metadata_salmonella.txt \
                                     --genus Salmonella \
                                     --projectDir /home/my_user/plepiseq-phylogenetic-pipeline \
                                     --results_prefix Salmonella_test \
-                                    --db /mnt/external_databases
+                                    --db /mnt/unity_nfs/external_databases
 ```
+
+`--db` defaults to `/mnt/unity_nfs/external_databases`, the shared NFS resource mounted on all compute nodes, so it can be omitted in that environment. Pass it explicitly if your databases live elsewhere.
 
 To see all available options and customize your run, use:
 
@@ -316,7 +318,7 @@ The visualization root is the deterministic weighted graph centre: the ST that m
 
 Samples whose cgMLST profile cannot be resolved against the profile database are reported in the process log and omitted from the Newick file; their metadata rows are still available in the Microreact map and table.
 
-As a result, the `--db` argument **must** be specified in the bacterial pipeline shell wrapper to provide information about alleles identified at each locus for a given Sequence Type (ST) in the cgMLST schema.
+As a result, the bacterial pipeline shell wrapper needs a `--db` directory providing information about alleles identified at each locus for a given Sequence Type (ST) in the cgMLST schema. It defaults to the shared `/mnt/unity_nfs/external_databases`.
 
 ## External Database Structure
 
@@ -328,11 +330,11 @@ Each species directory includes:
 ### Expected layout
 
 External datases strucutre is predefined and described in details in our [Sequnecing pipline](https://github.com/mkadlof/pzh_pipeline_viral), however the only requiered
-files are one with profiles information for supported species. Follwoing structure of PATH_TO_EXTRNAL_DATABASES must be respected
+files are one with profiles information for supported species. Follwoing structure of the `--db` directory (by default `/mnt/unity_nfs/external_databases`) must be respected
 
 ```
 
-PATH_TO_EXTERNAL_DATABASES/
+/mnt/unity_nfs/external_databases/
 ├── cgmlst/
 │   ├── Salmonella/
 │   │   ├── profiles.list

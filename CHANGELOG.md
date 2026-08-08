@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Name the Microreact tree panels `Phylogenetic tree` and `Time tree` instead of `Tree`.
 - Load `calculate_allelic_distance_and_plot_MST.py` from `bin/` in the MST tests instead of keeping a second copy under `tests/MST_bacteria/`.
+- Default `--db` to the shared NFS resource `/mnt/unity_nfs/external_databases` instead of the host-local `/mnt/raid/external_databases`, so the same command works on every compute node.
 
 ## [1.1.0] - 2026-07-28
 ### Fixed

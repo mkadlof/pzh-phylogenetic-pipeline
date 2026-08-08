@@ -28,7 +28,7 @@ err() {
 
 # required to run .nf script + "modules" should be a subdirectory
 projectDir="" # location of main project
-db_absolute_path_on_host="/mnt/raid/external_databases"
+db_absolute_path_on_host="/mnt/unity_nfs/external_databases" # shared NFS resource, reachable from every compute node
 
 
 # docker images required to execute this pipeline
@@ -76,9 +76,10 @@ usage() {
     echo "  -g, --genus NAZWA                 Rodzaj bakterii: Salmonella, Escherichia lub Campylobacter (WYMAGANE)"
     echo "  -p, --results_prefix PREFIKS      Prefiks dodawany do wszystkich plików wynikowych (WYMAGANE)"
     echo "  -d, --projectDir ŚCIEŻKA          Ścieżka do lokalnej wersji repozytorium (WYMAGANE)"
-    echo "  --db ŚCIEŻKA                      Sciezka do katalogu z pobranymi zewnetrznymi bazami (WYMAGANE)"
     echo
     echo "Opcjonalne parametry:"
+    echo "  --db ŚCIEŻKA                      Sciezka do katalogu z pobranymi zewnetrznymi bazami"
+    echo "                                    (domyślnie: /mnt/unity_nfs/external_databases)"
     echo "  -o, --results_dir ŚCIEŻKA         Katalog wynikowy (domyślnie: ./results)"
     echo "  -x, --profile NAZWA               Profil wykonania Nextflow (dozwolone: 'local' lub 'slurm', domyślnie: local)"
     echo "  -r, --clockrate WARTOŚĆ           Stała szybkość zegara molekularnego do TimeTree; jeśli nie podana, szacowana z danych lub ustawiana na wartość domyślną dla rodzaju"
