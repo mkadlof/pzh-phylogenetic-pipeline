@@ -303,8 +303,18 @@ pytest test_WGS2Phylo.py --data-dir ../../data/example_data/WGS2phylo/unit_tests
 
 # MST Tree
 
-The bacterial pipeline produces an interactive **Minimum Spanning Tree (MST)** in HTML format for all samples listed in the metadata file.  
+The bacterial pipeline produces an interactive **Minimum Spanning Tree (MST)** in HTML format for all samples listed in the metadata file.
 The MST is constructed based on allelic differences observed between profiles, adjusted for missing loci (following the pHierCC methodology).
+
+Alongside the HTML plot the pipeline writes:
+- `*_MST.tsv` – the MST edge list (`source`, `target`, `distance` in allelic differences),
+- `*_MST.nwk` – a sample-level Newick representation of the same MST, added as a third tree panel (`cgMLST MST`) in the Microreact project, next to the phylogenetic tree and the time tree.
+
+The MST itself is calculated between unique cgMLST sequence types (ST). Because Microreact links tree tips to metadata rows by sample identifier, every ST becomes an internal node in the Newick file and its samples are attached as zero-length terminal branches. Branch lengths between ST nodes are the allelic distances.
+
+The visualization root is the deterministic weighted graph centre: the ST that minimizes the largest allelic distance to any other ST. **This is a visualization root only and does not represent inferred ancestry.**
+
+Samples whose cgMLST profile cannot be resolved against the profile database are reported in the process log and omitted from the Newick file; their metadata rows are still available in the Microreact map and table.
 
 As a result, the `--db` argument **must** be specified in the bacterial pipeline shell wrapper to provide information about alleles identified at each locus for a given Sequence Type (ST) in the cgMLST schema.
 
@@ -351,10 +361,10 @@ The resulting HTML file will be saved in the pipeline’s output directory.
 
 ## Tests
 
-Go to `tests/MST_bacteria` and execute:
+Run from the repository root:
 ```bash
-pytest test_MST_bacteria.py -v
+pytest tests/MST_bacteria -v
 ```
 
-Dependencies: numpy, and pandas
+Dependencies: numpy, pandas, scipy, networkx, Biopython, Plotly, Click, and pytest
 
