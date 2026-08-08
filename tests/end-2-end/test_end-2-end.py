@@ -479,6 +479,9 @@ def test_filogram_data(json_file, json_field):
 @pytest.mark.filterwarnings("ignore")
 def test_tree_topology(tree_file):
     from ete3 import Tree
+    if tree_file.name not in GOLDENS:
+        # e.g. *_MST.nwk, whose topology depends on the external cgMLST database
+        pytest.skip(f"No golden topology defined for {tree_file.name}")
     # We allow 1 different split in trees
     expected = Tree(GOLDENS[tree_file.name], format=1)
     # observed = Tree(open(tree_file, "r").readline(), format=1)
