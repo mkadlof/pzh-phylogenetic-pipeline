@@ -21,7 +21,7 @@ def text_file_to_base64(file_path: str) -> str:
 
 
 def remove_tree_panel(project: dict, tree_id: str) -> None:
-    """Remove a tree and its pane from a template project."""
+    """Remove a tree and its pane (or tab) from a template project."""
     project.get('trees', {}).pop(tree_id, None)
 
     def prune_layout(node):
@@ -38,6 +38,10 @@ def remove_tree_panel(project: dict, tree_id: str) -> None:
             if not is_empty_tabset and not is_target_tab:
                 retained_children.append(child)
         node['children'] = retained_children
+
+        if node.get('type') == 'tabset' and 'selected' in node:
+            # A stale index would leave the tabset rendering nothing.
+            node['selected'] = min(node['selected'], max(len(retained_children) - 1, 0))
 
     panes = project.get('panes', {}).get('model', {}).get('layout', {})
     prune_layout(panes)

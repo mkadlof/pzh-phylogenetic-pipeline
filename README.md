@@ -310,7 +310,9 @@ The MST is constructed based on allelic differences observed between profiles, a
 
 Alongside the HTML plot the pipeline writes:
 - `*_MST.tsv` – the MST edge list (`source`, `target`, `distance` in allelic differences),
-- `*_MST.nwk` – a sample-level Newick representation of the same MST, added as a third tree panel (`cgMLST MST`) in the Microreact project, next to the phylogenetic tree and the time tree.
+- `*_MST.nwk` – a sample-level Newick representation of the same MST, added as a third tree tab (`cgMLST MST`) in the Microreact project, next to the phylogenetic tree and the time tree.
+
+All trees share one Microreact pane and are switched with the tabs above it. Viral projects, which have no MST, show the same pane with two tabs.
 
 The MST itself is calculated between unique cgMLST sequence types (ST). Because Microreact links tree tips to metadata rows by sample identifier, every ST becomes an internal node in the Newick file and its samples are attached as zero-length terminal branches. Branch lengths between ST nodes are the allelic distances.
 
