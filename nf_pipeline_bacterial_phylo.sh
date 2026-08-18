@@ -92,7 +92,8 @@ usage() {
     echo "  --main_image NAZWA:TAG            Obraz Docker zawierający narzędzia używane przez pipeline"
     echo "  --prokka_image NAZWA:TAG          Obraz Docker z oprogramowaniem Prokka"
     echo "  --map_detail STR                  Informacja czy na mapie próbka przypisana jest do poziomu kraju czy miasta"
-    echo "                                    (dozwolone wartości 'country' lub 'city', domyślnie city)"
+    echo "                                    (dozwolone wartości 'country' lub 'city', domyślnie city)."
+    echo "                                    Kolumna o tej nazwie w metadanych musi istnieć i nie może być pusta."
     echo "  -h, --help                        Show this help message"
     exit 1
 }
@@ -218,6 +219,29 @@ fi
 # 7. Validate map_detail
 if [[ "${map_detail}" != "country" && "${map_detail}" != "city" ]]; then
     echo "Błąd: nieprawidłowy typ danych wejściowych: '${map_detail}'. Dozwolone: city, country."; exit 1
+fi
+
+# Empty map_detail values are used as a join key against coordinates and
+# duplicate every sample (cartesian product of blank/NaN keys).
+map_detail_col=$(get_col_idx "$map_detail" "$header")
+if [ -z "$map_detail_col" ]; then
+    echo "Błąd: Kolumna '$map_detail' nie znaleziona w metadanych (wymagana przez --map_detail)."; exit 1
+fi
+
+empty_map_detail_rows=$(awk -v col="$map_detail_col" -F'\t' '
+    NR == 1 { next }
+    {
+        val = $col
+        gsub(/\r/, "", val)
+        gsub(/^[ \t]+|[ \t]+$/, "", val)
+        if (val == "" || val == "NA" || val == "NaN" || val == "nan" || val == ".") {
+            n++
+        }
+    }
+    END { if (n > 0) print n }
+' "$metadata")
+if [ -n "$empty_map_detail_rows" ]; then
+    echo "Błąd: Kolumna '$map_detail' zawiera puste wartości ($empty_map_detail_rows wierszy). Wartości w kolumnie wskazanej przez --map_detail nie mogą być puste."; exit 1
 fi
 
 # Numerical values

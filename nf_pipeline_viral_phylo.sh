@@ -91,7 +91,8 @@ usage() {
     echo "  --threshold_ambiguities LICZBA  Maksymalny odsetek symboli niejednoznacznych w genomie (float z przedziału [0, 1]) (domyślnie: 0)"
     echo "  --main_image NAZWA:TAG          Obraz Docker zawierający narzędzia używane przez pipeline"
     echo "  --map_detail STR                Informacja czy na mapie próbka przypisana jest do poziomu kraju czy miasta"
-    echo "                                  (dozwolone wartości 'country' lub 'city', domyślnie city)"
+    echo "                                  (dozwolone wartości 'country' lub 'city', domyślnie city)."
+    echo "                                  Kolumna o tej nazwie w metadanych nie może być pusta."
     echo "  -h, --help                      Show this help message"
     exit 1
 }
@@ -270,6 +271,25 @@ fi
 city_col=$(get_col_idx "city" "$header")
 if [ -z "$city_col" ]; then
     echo "Błąd: Kolumna 'city' nie znaleziona w metadanych."; exit 1
+fi
+
+# Empty map_detail values are used as a join key against coordinates and
+# duplicate every sample (cartesian product of blank/NaN keys).
+map_detail_col=$(get_col_idx "$map_detail" "$header")
+empty_map_detail_rows=$(awk -v col="$map_detail_col" -F'\t' '
+    NR == 1 { next }
+    {
+        val = $col
+        gsub(/\r/, "", val)
+        gsub(/^[ \t]+|[ \t]+$/, "", val)
+        if (val == "" || val == "NA" || val == "NaN" || val == "nan" || val == ".") {
+            n++
+        }
+    }
+    END { if (n > 0) print n }
+' "$metadata")
+if [ -n "$empty_map_detail_rows" ]; then
+    echo "Błąd: Kolumna '$map_detail' zawiera puste wartości ($empty_map_detail_rows wierszy). Wartości w kolumnie wskazanej przez --map_detail nie mogą być puste."; exit 1
 fi
 
 # Checks depending on safeguard_level
