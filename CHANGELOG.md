@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-09-12
+### Added
+- Validate the `date` metadata column in both wrappers: reject values that are not `YYYY-MM-DD`, and reject runs where every sample shares the same date unless `--clockrate` is provided.
+- Add `-with-trace` option to nextflow execution
+### Fixed
+- `raxml-ng` and `iqtree2` auto-detect a safe thread/worker count instead of always using every allocated CPU.
+
 ## [1.2.0] - 2026-08-08
 ### Added
 - Export the bacterial cgMLST MST as an edge list (`*_MST.tsv`) and as a sample-level Newick tree (`*_MST.nwk`), rooted at the weighted graph centre determined with `networkx`.
