@@ -260,18 +260,19 @@ process run_raxml {
       WORKERS=\$((${task.cpus} / 12))
     fi
 
+    # Cap threads/workers with auto{}
     # Modified precision to get in nwk even small distances 
     raxml-ng --all \\
              --msa ${fasta} \\
              --precision 15 \\
-             --threads ${task.cpus} \\
+             --threads auto{${task.cpus}} \\
              --model ${partition} \\
              --site-repeats on \\
              --tree pars{${ntrees}} \\
              --bs-trees ${nboots} \\
              --prefix tree \\
              --force \\
-             --workers \${WORKERS} \\
+             --workers auto{\${WORKERS}} \\
              --brlen scaled
 
     ID=`grep ">" ${fasta} | sed s'|>||g' | tr "\\n" ","`

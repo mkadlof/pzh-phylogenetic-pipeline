@@ -166,6 +166,7 @@ Depending on the configured safeguard level, the pipeline will not execute if:
 - More than one unique **`virus`** is present in the `virus` column.
 - More than one unique **`type`** is present in the `type` column (**default safeguard**).
 - The column selected by `--map_detail` (`city` by default, or `country`) contains empty values. Empty join keys duplicate rows when metadata is merged with coordinates.
+- The `date` column contains a value that is not `YYYY-MM-DD`, or every sample shares the exact same date and `--clockrate` was not provided. TimeTree cannot estimate a clock rate without variation in sampling dates; either add samples from another date or pass `--clockrate` explicitly.
 
 - This prevents accidental mixing of heterogeneous datasets (e.g., different viruses, types, or geographic origins) in a single phylogenetic analysis run.
 ---
@@ -252,6 +253,7 @@ The pipeline includes strict safeguards to ensure homogeneity of input data. The
 
 - Different **serotypes** (`Serovar` column in the metadata file) are provided together.
 - The column selected by `--map_detail` (`city` by default, or `country`) is missing or contains empty values. Empty join keys duplicate rows when metadata is merged with coordinates.
+- The `date` column contains a value that is not `YYYY-MM-DD`, or every sample shares the exact same date and `--clockrate` was not provided. TimeTree cannot estimate a clock rate without variation in sampling dates; either add samples from another date or pass `--clockrate` explicitly.
 
 ---
 

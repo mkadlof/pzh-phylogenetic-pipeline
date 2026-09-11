@@ -249,6 +249,37 @@ fi
 [[ "$min_support" =~ ^[0-9]+$ ]]    || err "--min_support must be integer"
 [[ "$starting_trees" =~ ^[0-9]+$ ]] || err "--startingTrees must be integer"
 
+# Validate date column: required format YYYY-MM-DD and, unless --clockrate is
+# explicitly provided, at least two distinct sampling dates. TimeTree's clock-rate
+# estimation (treetime clock) crashes with "No variation in sampling dates!" when
+# every sample shares the same date, before its own fallback logic can kick in, so
+# we catch this before launching Nextflow.
+date_col=$(get_col_idx "date" "$header")
+if [ -z "$date_col" ]; then
+    echo "Błąd: Kolumna 'date' nie znaleziona w metadanych."; exit 1
+fi
+
+invalid_dates=$(awk -v col="$date_col" -F'\t' '
+    NR == 1 { next }
+    {
+        val = $col
+        gsub(/\r/, "", val)
+        gsub(/^[ \t]+|[ \t]+$/, "", val)
+        if (val !~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) {
+            n++
+        }
+    }
+    END { if (n > 0) print n }
+' "$metadata")
+if [ -n "$invalid_dates" ]; then
+    echo "Błąd: Kolumna 'date' zawiera wartości niezgodne z wymaganym formatem YYYY-MM-DD ($invalid_dates wierszy)."; exit 1
+fi
+
+unique_dates=$(awk -v col="$date_col" -F'\t' 'NR>1 {print $col}' "$metadata" | sort | uniq | wc -l)
+if [ "$unique_dates" -lt 2 ] && [ -z "$clockrate" ]; then
+    echo "Błąd: Wszystkie próbki mają identyczną datę pobrania (kolumna 'date'). TimeTree nie jest w stanie oszacować clock rate bez zmienności dat w tej kolumnie - podaj wartość --clockrate lub dodaj próbki z inną datą."; exit 1
+fi
+
 # 8 Safegurads 
 # Restrict the analysis to samples belonging to the same serovar or ST.
 # Analysis of samples from different serovars/ST makes no sense
@@ -317,6 +348,10 @@ args=(
 # Append optional clockrate only if set
 [ -n "${clockrate:-}" ] && args+=( "--clockrate" "$clockrate" )
 
+# Trace file lets us see which process failed and its exit status/duration
+# without digging through Nextflow's work/ hash directories.
+trace_file="${results_dir}/${results_prefix}_trace.txt"
+
 set -x
-nextflow run "${projectDir}/nf_bacterial_phylogenetic_pipeline.nf" -profile "$profile" "${args[@]}"
+nextflow run "${projectDir}/nf_bacterial_phylogenetic_pipeline.nf" -profile "$profile" -with-trace "$trace_file" "${args[@]}"
 
