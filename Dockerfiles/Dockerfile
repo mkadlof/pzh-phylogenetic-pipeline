@@ -39,6 +39,7 @@ RUN pip install ete3==3.1.3 \
                 click==8.1.8 \
                 requests==2.32.3 \
                 Biopython==1.85 \
+                networkx==3.6.1 \
                 pandas==2.3.0 \
                 plotly==6.3.0
 
@@ -95,7 +96,6 @@ COPY config/* /opt/docker/config/
 # Viral scripts/config
 COPY bin/* /opt/scripts/
 COPY data/auspice_config.json /etc/auspice/auspice_config.json
-COPY data/microreact_config_bacteria.microreact /opt/docker/config/microreact_config_bacteria.microreact
 COPY VERSION /opt/docker/
 
 CMD ["/bin/bash"]

@@ -55,6 +55,8 @@ params.projectDir = ""
 modules = "${params.projectDir}/modules"
 include { create_input_params_json } from "${modules}/create_input_params_json.nf"
 include {json_aggregator} from "${modules}/json_aggregator.nf"
+include {convert_MST_to_newick} from "${modules}/convert_mst_to_newick.nf"
+include {prepare_microreact_json_with_mst} from "${modules}/prepare_microreact_json.nf"
 
 
 // Processes 
@@ -258,18 +260,19 @@ process run_raxml {
       WORKERS=\$((${task.cpus} / 12))
     fi
 
+    # Cap threads/workers with auto{}
     # Modified precision to get in nwk even small distances 
     raxml-ng --all \\
              --msa ${fasta} \\
              --precision 15 \\
-             --threads ${task.cpus} \\
+             --threads auto{${task.cpus}} \\
              --model ${partition} \\
              --site-repeats on \\
              --tree pars{${ntrees}} \\
              --bs-trees ${nboots} \\
              --prefix tree \\
              --force \\
-             --workers \${WORKERS} \\
+             --workers auto{\${WORKERS}} \\
              --brlen scaled
 
     ID=`grep ">" ${fasta} | sed s'|>||g' | tr "\\n" ","`
@@ -599,35 +602,9 @@ process metadata_for_microreact {
     
 }
 
-process prepare_microreact_json {
-    container  = params.main_image 
-    publishDir "${params.results_dir}/${params.results_prefix}/", mode: 'copy', pattern: "${params.results_prefix}_microreactproject.microreact"
-    tag "Preparing .microreact file"
-    cpus 1
-    memory "20 GB"
-    time "1h"
-    input:
-    path("${params.results_prefix}_metadata_microreact.tsv")
-    tuple path(tree_regular), path("tree_rescaled_branches")
-    output:
-    path("${params.results_prefix}_microreactproject.microreact")
-    script:
-    """
-
-    python3 /opt/docker/custom_scripts/prepare_json_for_microreact.py --input_json /opt/docker/config/microreact_config_bacteria.microreact \
-                                                                      --classical_tree ${tree_regular} \
-                                                                      --rescaled_tree ${tree_rescaled_branches} \
-                                                                      --metadata ${params.results_prefix}_metadata_microreact.tsv \
-                                                                      --project_name ${params.results_prefix} \
-                                                                      --output ${params.results_prefix}_microreactproject.microreact
-
-    """
-
-}
-
 process prepare_MST {
     container  = params.main_image
-    publishDir "${params.results_dir}/${params.results_prefix}/", mode: 'copy', pattern: "${params.results_prefix}_MST.html"
+    publishDir "${params.results_dir}/${params.results_prefix}/", mode: 'copy', pattern: "${params.results_prefix}_MST.{html,tsv}"
     containerOptions "--volume ${params.db_absolute_path_on_host}:/db"
 
     tag "Preparing minimum spanning tree"
@@ -637,7 +614,8 @@ process prepare_MST {
     input:
     path(metadata)
     output:
-    path("${params.results_prefix}_MST.html")
+    path("${params.results_prefix}_MST.html"), emit: html
+    path("${params.results_prefix}_MST.tsv"), emit: edges
     script:
     """
     if [[ "${params.genus}" == *"Salmo"* ]]; then
@@ -656,6 +634,7 @@ process prepare_MST {
                                                                                   --local-profiles \${profile_local_path} \
                                                                                   --plot ${params.results_prefix}_MST.html \
                                                                                   --output ${params.results_prefix}_distance.tsv \
+                                                                                  --mst-output ${params.results_prefix}_MST.tsv \
                                                                                   --threads ${task.cpus} \
                                                                                   --color-by "HC5"
 
@@ -739,11 +718,12 @@ metadata_for_microreact_out = metadata_for_microreact(generate_colors_for_featur
 // visualize_tree_out_2 = visualize_tree_2(add_dummy_data_out, generate_colors_for_features_out, metadata_channel, "regulartree")
 // save_input_to_log(gff_input)
 
-prepare_microreact_json_out = prepare_microreact_json(metadata_for_microreact_out, add_temporal_data_out.to_microreact)
-
 // create MST
 
-prepare_MST(metadata_channel)
+prepare_MST_out = prepare_MST(metadata_channel)
+convert_MST_to_newick_out = convert_MST_to_newick(prepare_MST_out.edges, metadata_channel)
+
+prepare_microreact_json_out = prepare_microreact_json_with_mst(metadata_for_microreact_out, add_temporal_data_out.to_microreact, convert_MST_to_newick_out)
 
 // json aggegator
 

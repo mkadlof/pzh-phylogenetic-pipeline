@@ -1,7 +1,13 @@
+import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
-import subprocess
+
+TESTS_DIR = Path(__file__).parent
+sys.path.insert(0, str(TESTS_DIR.parents[1] / "bin"))
+
 from calculate_allelic_distance_and_plot_MST import (
     calculate_distance,
     calculte_distance_matrix,
@@ -11,14 +17,17 @@ from calculate_allelic_distance_and_plot_MST import (
     visualize_mst
 )
 
+PUBLIC_PROFILES = str(TESTS_DIR / "profiles_test.list")
+LOCAL_PROFILES = str(TESTS_DIR / "profiles_local_test.list")
+
 # -------------------------------------------------------------------
 # 🧩 UNIT TESTS
 # -------------------------------------------------------------------
 
 
 def test_load_profiles_to_dict(tmp_path):
-    public_path = "profiles_test.list"
-    local_path = "profiles_local_test.list"
+    public_path = PUBLIC_PROFILES
+    local_path = LOCAL_PROFILES
 
     pub_ST = load_profiles_to_dict(public_path)
     local_ST = load_profiles_to_dict(local_path)
@@ -34,8 +43,8 @@ def test_extract_profiles(tmp_path):
     Integration test: verify that extract_profiles() correctly merges
     public and local cgMLST profiles using real data files.
     """
-    public_path = "profiles_test.list"
-    local_path = "profiles_local_test.list"
+    public_path = PUBLIC_PROFILES
+    local_path = LOCAL_PROFILES
 
     # --- Load both sets ---
     pub_ST_dict = load_profiles_to_dict(public_path)
@@ -77,8 +86,8 @@ def test_calculate_distance_matrix_real_data(tmp_path):
     Integration test: calculate allelic distance matrix for real profiles
     (public + local), using only the first 9 loci for simplicity.
     """
-    public_path = "profiles_test.list"
-    local_path = "profiles_local_test.list"
+    public_path = PUBLIC_PROFILES
+    local_path = LOCAL_PROFILES
 
     # --- Load and merge ---
     pub_ST = load_profiles_to_dict(public_path)
@@ -111,6 +120,21 @@ def test_calculate_distance_matrix_caps_workers_to_profile_count():
     assert np.array_equal(np.diag(dist), np.zeros(2, dtype=np.int16))
 
 
+def test_calculate_mst_keeps_zero_distance_edges():
+    """Sequence types with identical profiles must stay connected in the MST."""
+    dist = np.array([
+        [0, 0, 5],
+        [0, 0, 4],
+        [5, 4, 0],
+    ], dtype=np.int16)
+
+    edges = calculate_mst(dist, ["A", "B", "C"])
+
+    assert edges.shape == (2, 3)
+    observed = {(source, target): distance for source, target, distance in edges}
+    assert observed == {("A", "B"): 0, ("B", "C"): 4}
+
+
 def test_visualize_mst_runs(tmp_path):
     """Ensure MST visualization runs and produces an HTML file."""
     edges = np.array([["A", "B", 1], ["B", "C", 2]], dtype=object)
@@ -129,8 +153,8 @@ def test_end_to_end_script(tmp_path):
     End-to-end test: simulate full workflow of cgMLST distance + MST generation.
     Uses real input data, produces both TSV and HTML outputs, and validates results.
     """
-    public_path = "profiles_test.list"
-    local_path = "profiles_local_test.list"
+    public_path = PUBLIC_PROFILES
+    local_path = LOCAL_PROFILES
     output_tsv = tmp_path / "dist_matrix.tsv"
     output_html = tmp_path / "mst_plot.html"
 
@@ -159,7 +183,7 @@ def test_end_to_end_script(tmp_path):
         counts,
         color_map=color_map,
         color_label="HC10",
-        output_html='test.html',
+        output_html=str(output_html),
         sample_map=sample_map
     )
 

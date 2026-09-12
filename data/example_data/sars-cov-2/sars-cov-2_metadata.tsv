@@ -1,21 +1,21 @@
-strain	virus	date	country	city	status_A	type
-SARS3_01	sars-cov-2	2023-11-29	Polska	Bydgoszcz	A	sars-cov-2
-SARS3_02	sars-cov-2	2023-01-01	Polska	Opole	A	sars-cov-2
-SARS3_03	sars-cov-2	2023-01-01	Niemcy	Köln	A	sars-cov-2
-SARS3_04	sars-cov-2	2023-01-01	Czechy	Pilzno	B	sars-cov-2
-SARS3_05	sars-cov-2	2023-01-01	Polska	Kraków	B	sars-cov-2
-SARS3_06	sars-cov-2	2023-01-01	Niemcy	Berlin	B	sars-cov-2
-SARS3_07	sars-cov-2	2023-01-03	Polska	Szczecin	A	sars-cov-2
-SARS3_08	sars-cov-2	2023-01-11	Czechy	Brno	B	sars-cov-2
-SARS3_09	sars-cov-2	2023-01-01	Czechy	Pardubice	A	sars-cov-2
-SARS3_10	sars-cov-2	2021-07-16	Niemcy	Frankfurt	A	sars-cov-2
-SARS3_11	sars-cov-2	2023-01-01	Polska	Łódź	B	sars-cov-2
-SARS3_12	sars-cov-2	2023-01-01	Czechy	Praga	A	sars-cov-2
-SARS3_13	sars-cov-2	2024-01-01	Niemcy	Hamburg	B	sars-cov-2
-SARS3_14	sars-cov-2	2023-09-20	Polska	Wrocław	A	sars-cov-2
-SARS3_15	sars-cov-2	2021-07-16	Polska	Gdańsk	A	sars-cov-2
-SARS3_16	sars-cov-2	2021-07-16	Polska	Katowice	A	sars-cov-2
-SARS3_17	sars-cov-2	2021-07-16	Niemcy	Drezno	A	sars-cov-2
-SARS3_18	sars-cov-2	2021-07-16	Czechy	Ostrawa	A	sars-cov-2
-SARS3_19	sars-cov-2	2023-01-01	Niemcy	Monachium	A	sars-cov-2
-SARS3_20	sars-cov-2	2023-01-01	Polska	Toruń	A	sars-cov-2
+strain	virus	date	country	city	status_A	type	age	gender	source
+SARS3_01	sars-cov-2	2023-11-29	Polska	Bydgoszcz	A	sars-cov-2	45	F	human
+SARS3_02	sars-cov-2	2023-01-01	Polska	Opole	A	sars-cov-2	32	M	human
+SARS3_03	sars-cov-2	2023-01-01	Niemcy	Köln	A	sars-cov-2	61	F	food
+SARS3_04	sars-cov-2	2023-01-01	Czechy	Pilzno	B	sars-cov-2	29	M	human
+SARS3_05	sars-cov-2	2023-01-01	Polska	Kraków	B	sars-cov-2	54	F	human
+SARS3_06	sars-cov-2	2023-01-01	Niemcy	Berlin	B	sars-cov-2	38	M	food
+SARS3_07	sars-cov-2	2023-01-03	Polska	Szczecin	A	sars-cov-2	47	F	human
+SARS3_08	sars-cov-2	2023-01-11	Czechy	Brno	B	sars-cov-2	22	M	human
+SARS3_09	sars-cov-2	2023-01-01	Czechy	Pardubice	A	sars-cov-2	66	F	food
+SARS3_10	sars-cov-2	2021-07-16	Niemcy	Frankfurt	A	sars-cov-2	33	M	human
+SARS3_11	sars-cov-2	2023-01-01	Polska	Łódź	B	sars-cov-2	58	F	human
+SARS3_12	sars-cov-2	2023-01-01	Czechy	Praga	A	sars-cov-2	41	M	food
+SARS3_13	sars-cov-2	2024-01-01	Niemcy	Hamburg	B	sars-cov-2	27	F	human
+SARS3_14	sars-cov-2	2023-09-20	Polska	Wrocław	A	sars-cov-2	50	M	human
+SARS3_15	sars-cov-2	2021-07-16	Polska	Gdańsk	A	sars-cov-2	63	F	food
+SARS3_16	sars-cov-2	2021-07-16	Polska	Katowice	A	sars-cov-2	36	M	human
+SARS3_17	sars-cov-2	2021-07-16	Niemcy	Drezno	A	sars-cov-2	44	F	human
+SARS3_18	sars-cov-2	2021-07-16	Czechy	Ostrawa	A	sars-cov-2	59	M	food
+SARS3_19	sars-cov-2	2023-01-01	Niemcy	Monachium	A	sars-cov-2	31	F	human
+SARS3_20	sars-cov-2	2023-01-01	Polska	Toruń	A	sars-cov-2	48	M	human

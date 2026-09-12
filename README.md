@@ -40,7 +40,7 @@ Quick start
     ```
    Expected outputs of these scripts can also be found under: `data/example_data/end-2-end/`. 
 
-   Note: `run_example_influenza.sh` and `run_example_rsv.sh` use `slurm` executor, modify these files if you want to use `local` executor. For `run_example_salmonella.sh` the variable PATH_TO_EXTERNAL_DATABASES must be set manually.
+   Note: `run_example_influenza.sh` and `run_example_rsv.sh` use `slurm` executor, modify these files if you want to use `local` executor. `run_example_salmonella.sh` points `PATH_TO_EXTERNAL_DATABASES` at the shared `/mnt/unity_nfs/external_databases`; adjust it if your databases live elsewhere.
    
 
 8. [Optional] Validate example outputs with pytest. Default outputs of the example scripts are in `results/test_*` directories.
@@ -156,7 +156,7 @@ The metadata file must be a tab-separated file with the following required colum
 - `city` – City name (e.g., `Paris`)
 - `type` – Additional classification column representing suptype for Influenza (e.g `H1N1` )or type for for RSV (e.g. `A`). For SARS-CoV-2 can be identical with `virus` column
 
-Other columns are optional and can be used for additional metadata.
+Other columns are optional and can be used for additional metadata. All columns in metadata file are shipped to microreact project and shown in a default view.
 
 To ensure homogeneity of input data, the pipeline applies **safeguards**.  
 The default safeguard level is **`type`**, meaning that all samples in one run must share the same `type` value.
@@ -166,6 +166,7 @@ Depending on the configured safeguard level, the pipeline will not execute if:
 - More than one unique **`virus`** is present in the `virus` column.
 - More than one unique **`type`** is present in the `type` column (**default safeguard**).
 - The column selected by `--map_detail` (`city` by default, or `country`) contains empty values. Empty join keys duplicate rows when metadata is merged with coordinates.
+- The `date` column contains a value that is not `YYYY-MM-DD`, or every sample shares the exact same date and `--clockrate` was not provided. TimeTree cannot estimate a clock rate without variation in sampling dates; either add samples from another date or pass `--clockrate` explicitly.
 
 - This prevents accidental mixing of heterogeneous datasets (e.g., different viruses, types, or geographic origins) in a single phylogenetic analysis run.
 ---
@@ -208,7 +209,7 @@ Follow these steps to run the pipeline with minimal setup:
 2. Copy the `nf_pipeline_bacterial_phylo.sh` script from the repository’s root directory into your working directory.
 3. (Optional) Copy a valid metadata file e.g. `metadata_salmonella.txt` file and a `fastas/` directory with uncompressed genome FASTA files into the working directory.  Example files are available in the `data/example_data/salmonella` directory of the repository.
 
-Assuming your working directory contains `metadata_salmonella.txt` and a `fastas/` directory, cloned this repo to `/home/my_user/plepiseq-phylogenetic-pipeline`, and you’ve built/pulled the required Docker images as described in Quick Start section, and external databases are located in `/mnt/external_databases` run:
+Assuming your working directory contains `metadata_salmonella.txt` and a `fastas/` directory, cloned this repo to `/home/my_user/plepiseq-phylogenetic-pipeline`, and you’ve built/pulled the required Docker images as described in Quick Start section, and external databases are located in `/mnt/unity_nfs/external_databases` run:
 
 ```bash
 bash nf_pipeline_bacterial_phylo.sh --metadata metadata_salmonella.txt \
@@ -217,8 +218,10 @@ bash nf_pipeline_bacterial_phylo.sh --metadata metadata_salmonella.txt \
                                     --genus Salmonella \
                                     --projectDir /home/my_user/plepiseq-phylogenetic-pipeline \
                                     --results_prefix Salmonella_test \
-                                    --db /mnt/external_databases
+                                    --db /mnt/unity_nfs/external_databases
 ```
+
+`--db` defaults to `/mnt/unity_nfs/external_databases`, the shared NFS resource mounted on all compute nodes, so it can be omitted in that environment. Pass it explicitly if your databases live elsewhere.
 
 To see all available options and customize your run, use:
 
@@ -250,7 +253,9 @@ The pipeline includes strict safeguards to ensure homogeneity of input data. The
 
 - Different **serotypes** (`Serovar` column in the metadata file) are provided together.
 - The column selected by `--map_detail` (`city` by default, or `country`) is missing or contains empty values. Empty join keys duplicate rows when metadata is merged with coordinates.
+- The `date` column contains a value that is not `YYYY-MM-DD`, or every sample shares the exact same date and `--clockrate` was not provided. TimeTree cannot estimate a clock rate without variation in sampling dates; either add samples from another date or pass `--clockrate` explicitly.
 
+All columns in metadata file are shipped to microreact project and shown in a default view.
 ---
 
 ## Input File Naming
@@ -271,6 +276,17 @@ For a file named `ERRXYZ.fasta`, the corresponding `strain` value in the metadat
 A helper script to prepare metadata file based on the results of our [Sequnecing pipline](https://github.com/mkadlof/plepiseq-wgs-pipeline). 
 With `--with-fasta` a phylogenetic pipeline-ready fasta input can also be prepared. The generated FASTA files and metadata are directly compatible with the viral and bacterial phylogenetic pipelines described above.
 Use `--without-fasta` to skip fasta file processing.
+
+### HierCC clustering columns (bacterial organisms)
+
+In normal mode (i.e. without `--extra-fields`), the bacterial branch now also emits `HC0`, `HC2`, `HC5`, `HC10` and `HC20` — the cgMLST HierCC clustering group ID at each of those levels (`hiercc_clustering_internal_data`). Not every organism/scheme reports every level (e.g. Campylobacter has no `HC0`/`HC2`/`HC20`); a missing level is written as `Unknown`, same as the rest of this script's "not available" fields.
+
+### `--supplemental-file` columns
+
+- `date`, `region`, `country`, `division`, `city` are required by the phylogenetic pipeline itself (see safeguards above), so they are always looked up case-insensitively and kept even when empty.
+- Any other column in the supplemental file (e.g. `age`, `gender`) is passed through to `metadata.tsv` as-is, under its original header text, since it is not used anywhere except being embedded as an opaque blob in the Microreact project. Missing/empty values in these extra columns are written as `N/A`.
+- Column names matching a field the pipeline itself computes (`strain`, `virus`, `type`, `Serovar`, `MLST`, `cgMLST`, `HC5`, `HC10`) or the `--id-column` are ignored to avoid overwriting pipeline-computed values.
+- Extra column values are sanitized before being written: embedded tabs/newlines are collapsed to a space (so a stray character can't shift every column after it), and values starting with `=`, `+`, `-` or `@` are prefixed with `'` to defuse spreadsheet "formula injection" for anyone who later opens the TSV in Excel/LibreOffice/Google Sheets.
 
 ## Example data 
 - [WGS output for bacterial](data/example_data/WGS2phylo/)
@@ -303,10 +319,22 @@ pytest test_WGS2Phylo.py --data-dir ../../data/example_data/WGS2phylo/unit_tests
 
 # MST Tree
 
-The bacterial pipeline produces an interactive **Minimum Spanning Tree (MST)** in HTML format for all samples listed in the metadata file.  
+The bacterial pipeline produces an interactive **Minimum Spanning Tree (MST)** in HTML format for all samples listed in the metadata file.
 The MST is constructed based on allelic differences observed between profiles, adjusted for missing loci (following the pHierCC methodology).
 
-As a result, the `--db` argument **must** be specified in the bacterial pipeline shell wrapper to provide information about alleles identified at each locus for a given Sequence Type (ST) in the cgMLST schema.
+Alongside the HTML plot the pipeline writes:
+- `*_MST.tsv` – the MST edge list (`source`, `target`, `distance` in allelic differences),
+- `*_MST.nwk` – a sample-level Newick representation of the same MST, added as a third tree tab (`cgMLST MST`) in the Microreact project, next to the phylogenetic tree and the time tree.
+
+All trees share one Microreact pane and are switched with the tabs above it. Viral projects, which have no MST, show the same pane with two tabs.
+
+The MST itself is calculated between unique cgMLST sequence types (ST). Because Microreact links tree tips to metadata rows by sample identifier, every ST becomes an internal node in the Newick file and its samples are attached as zero-length terminal branches. Branch lengths between ST nodes are the allelic distances.
+
+The visualization root is the deterministic weighted graph centre: the ST that minimizes the largest allelic distance to any other ST. **This is a visualization root only and does not represent inferred ancestry.**
+
+Samples whose cgMLST profile cannot be resolved against the profile database are reported in the process log and omitted from the Newick file; their metadata rows are still available in the Microreact map and table.
+
+As a result, the bacterial pipeline shell wrapper needs a `--db` directory providing information about alleles identified at each locus for a given Sequence Type (ST) in the cgMLST schema. It defaults to the shared `/mnt/unity_nfs/external_databases`.
 
 ## External Database Structure
 
@@ -318,11 +346,11 @@ Each species directory includes:
 ### Expected layout
 
 External datases strucutre is predefined and described in details in our [Sequnecing pipline](https://github.com/mkadlof/pzh_pipeline_viral), however the only requiered
-files are one with profiles information for supported species. Follwoing structure of PATH_TO_EXTRNAL_DATABASES must be respected
+files are one with profiles information for supported species. Follwoing structure of the `--db` directory (by default `/mnt/unity_nfs/external_databases`) must be respected
 
 ```
 
-PATH_TO_EXTERNAL_DATABASES/
+/mnt/unity_nfs/external_databases/
 ├── cgmlst/
 │   ├── Salmonella/
 │   │   ├── profiles.list
@@ -351,10 +379,10 @@ The resulting HTML file will be saved in the pipeline’s output directory.
 
 ## Tests
 
-Go to `tests/MST_bacteria` and execute:
+Run from the repository root:
 ```bash
-pytest test_MST_bacteria.py -v
+pytest tests/MST_bacteria -v
 ```
 
-Dependencies: numpy, and pandas
+Dependencies: numpy, pandas, scipy, networkx, Biopython, Plotly, Click, and pytest
 

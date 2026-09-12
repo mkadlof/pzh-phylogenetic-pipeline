@@ -1,6 +1,6 @@
-id	date	region	country	division	city
-EQA-Camp-25-02_S28_L001	2023-01-01	Europe	Poland	-	Warsaw	
-EQA-Camp-25-05_S31_L001	2023-01-02	Europe	Poland	-	Warsaw
-EQA-Camp-25-04_S30_L001	2024-01-01	Europe	Germany	-	Berlin
-EQA-Camp-25-01_S27_L001	2000-01-02	Europe	Germany	-	Berlin
-EQA-Camp-25-03_S29_L001	2000-12-12	Europe	Germany	-	Munchen
+id	date	region	country	division	city	age	gender
+EQA-Camp-25-02_S28_L001	2023-01-01	Europe	Poland	-	Warsaw	34	F
+EQA-Camp-25-05_S31_L001	2023-01-02	Europe	Poland	-	Warsaw		M
+EQA-Camp-25-04_S30_L001	2024-01-01	Europe	Germany	-	Berlin	58	F
+EQA-Camp-25-01_S27_L001	2000-01-02	Europe	Germany	-	Berlin	27	M
+EQA-Camp-25-03_S29_L001	2000-12-12	Europe	Germany	-	Munchen	45	F

@@ -19,8 +19,9 @@ process iqtree {
     # -alrt Runs the SH-aLRT test to improve branch support calculations
     # -wsr Runs weighted Shimodaira–Hasegawa-like to improve final tree topology
     # -ninit Sets the number of starting trees
+    # -T AUTO --threads-max caps parallelism instead of forcing task.cpus
 
-    iqtree2 -nt  ${task.cpus} \
+    iqtree2 -T AUTO --threads-max ${task.cpus} \
             -s ${aln} \
             -m ${params.model} \
             -bb ${params.bootstrap} \

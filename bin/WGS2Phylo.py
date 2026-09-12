@@ -142,10 +142,20 @@ def get_viral_genome_data(json_data: Dict) -> Dict:
 
     return output_dict
 
+# HierCC clustering levels reported in the output metadata, in normal mode
+# (i.e. not gated behind --extra-fields). Not every organism/scheme emits
+# every level (e.g. Campylobacter has no HC0/HC2/HC20), so missing levels
+# fall back to 'Unknown' rather than raising an error.
+HIERCC_LEVELS = ["0", "2", "5", "10", "20"]
+
+
 def get_mlst_cgmlst(json_data: Dict) -> Dict:
     """
-    Extract MLST and cgMLST profile IDs.
-    Returns (mlst_id, cgmlst_id, reasons).
+    Extract MLST and cgMLST profile IDs, plus HierCC clustering group IDs for
+    each level in HIERCC_LEVELS.
+
+    Returns a dict with mlst_id, cgmlst_id, mlst_public, cgmlst_public,
+    hc<level> for each level in HIERCC_LEVELS, and reasons.
     """
 
     output_data = json_data.get("output", {})
@@ -153,8 +163,7 @@ def get_mlst_cgmlst(json_data: Dict) -> Dict:
 
     reasons = []
 
-    hc5 = 'Unknown'
-    hc10 = 'Unknown'
+    hiercc_by_level = {level: 'Unknown' for level in HIERCC_LEVELS}
     cgmlst_id = 'Unknown'
     cgmlst_public = "Unknown"
     mlst_id = 'Unknown'
@@ -172,10 +181,9 @@ def get_mlst_cgmlst(json_data: Dict) -> Dict:
 
                 hiercc = entry.get('hiercc_clustering_internal_data', [])
                 for level in hiercc:
-                    if level.get('level', '') == '5':
-                        hc5 = level.get('group_id')
-                    elif level.get('level', '') == '10':
-                        hc10 = level.get('group_id')
+                    level_name = str(level.get('level', ''))
+                    if level_name in hiercc_by_level:
+                        hiercc_by_level[level_name] = level.get('group_id')
 
 
         elif scheme_name.startswith("mlst"):
@@ -186,13 +194,14 @@ def get_mlst_cgmlst(json_data: Dict) -> Dict:
                 mlst_public = entry.get('closest_external_profile_id')
 
 
-    return {'mlst_id' : mlst_id,
-            'cgmlst_id' : cgmlst_id,
-            'mlst_public' : mlst_public,
-            'cgmlst_public' : cgmlst_public,
-            'hc5': hc5,
-            'hc10' : hc10,
-            'reasons': reasons}
+    result = {'mlst_id' : mlst_id,
+              'cgmlst_id' : cgmlst_id,
+              'mlst_public' : mlst_public,
+              'cgmlst_public' : cgmlst_public,
+              'reasons': reasons}
+    for level in HIERCC_LEVELS:
+        result[f'hc{level}'] = hiercc_by_level[level]
+    return result
 
 
 def get_serovar_bacteria(json_data:Dict) -> Dict:
@@ -371,6 +380,48 @@ def get_fastqc_stats(json_data, direction):
                 output[f"reads_median_length"] = entry.get('reads_median_length_value', -1)
     return output
 
+
+# Base metadata columns that are always populated by the pipeline itself.
+# Supplemental-file columns using these names are ignored to avoid silently
+# overwriting values the pipeline computes from the WGS JSON output.
+RESERVED_METADATA_FIELDS = {"strain", "virus", "type", "serovar", "mlst", "cgmlst"} | {f"hc{level}" for level in HIERCC_LEVELS}
+
+
+def sanitize_supplemental_value(value):
+    """
+    Sanitize a free-text value read from a user-supplied supplemental metadata file.
+
+    The phylogenetic pipeline never filters extra metadata columns (they end up
+    base64-blobbed into the Microreact project as-is), so arbitrary free-text
+    fields such as age or gender are never executed as code anywhere in this
+    codebase. The two concrete risks are therefore not code/shell injection but:
+    (1) an embedded tab/newline/carriage-return silently shifting every column
+    to its right in the output TSV, and (2) "CSV/formula injection" -- a value
+    starting with '=', '+', '-' or '@' being interpreted as a formula by
+    Excel/LibreOffice/Google Sheets if a human later opens the file there.
+
+    :param value: Raw string value read from the supplemental file, or None.
+    :return: A value safe to write as a single TSV cell; "N/A" if empty/missing.
+    """
+    if value is None:
+        return "N/A"
+    value = str(value).strip()
+    if value == "":
+        return "N/A"
+    # Collapse characters that would otherwise break TSV column alignment.
+    value = value.replace("\t", " ").replace("\r", " ").replace("\n", " ")
+    # Drop other control characters defensively (keep normal whitespace/text).
+    value = "".join(ch for ch in value if ch == " " or ch.isprintable()).strip()
+    if value == "":
+        return "N/A"
+    # Defuse spreadsheet formula injection: prefix with a single quote, which
+    # Excel/LibreOffice/Sheets treat as "force text" and simply strip on
+    # display, instead of letting the leading character trigger a formula.
+    if value[0] in ("=", "+", "-", "@"):
+        value = "'" + value
+    return value
+
+
 #### CLI and main processing function ####
 
 @click.command()
@@ -394,6 +445,13 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
     # Define optional metadata fields and read supplemental file if provided
     optional_fields = ["date", "region", "country", "division", "city"]
     optional_fields_present = []
+    # Any other column the user puts in the supplemental file (e.g. age,
+    # gender) is passed through to the output as-is, in file order, under its
+    # original header text: it is not used anywhere in this pipeline besides
+    # being base64-blobbed into the Microreact project, so it is not this
+    # script's business to filter it. See sanitize_supplemental_value() for
+    # the (non-code-execution) risks that are guarded against.
+    extra_fields_present = []
     sup_data = {}
     if supplemental_file:
         # Determine delimiter from extension or content
@@ -422,6 +480,19 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
                                 break
                 # Preserve the defined order of optional fields
                 optional_fields_present = [f for f in optional_fields if f in optional_fields_present]
+
+                # Any remaining column (besides the id column and the fields
+                # the pipeline itself computes) is a free-form extra field:
+                # keep its header text exactly as the user wrote it, in file
+                # order, and skip duplicate/blank header names defensively.
+                reserved_lower = set(optional_fields) | RESERVED_METADATA_FIELDS | {id_column.lower().strip()}
+                seen_extra_lower = set()
+                for header_name in reader.fieldnames:
+                    header_lower = header_name.lower().strip()
+                    if not header_lower or header_lower in reserved_lower or header_lower in seen_extra_lower:
+                        continue
+                    seen_extra_lower.add(header_lower)
+                    extra_fields_present.append(header_name)
             # Map sample ID to its supplemental metadata
             for row in reader:
                 sample_id = (row.get(id_column) or row.get(id_column.capitalize()) or row.get(id_column.lower()))
@@ -437,6 +508,8 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
                             val = value.strip() if isinstance(value, str) else value
                             break
                     sup_data[sample_id][field] = val if val not in ['', None] else None
+                for field in extra_fields_present:
+                    sup_data[sample_id][field] = sanitize_supplemental_value(row.get(field))
 
     # Prepare output directory if needed
     out_dir = os.path.dirname(output_prefix)
@@ -458,10 +531,13 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
     # Determine base header fields (for bacterial organisms vs viruses)
     if organism in ['salmonella', 'campylobacter', 'escherichia']:
         # Required field
-        header = ["strain", "Serovar", "MLST", "cgMLST", "HC5", "HC10"]
+        header = ["strain", "Serovar", "MLST", "cgMLST"] + [f"HC{level}" for level in HIERCC_LEVELS]
 
         # Add any optional metadata fields present in supplemental file
         header += optional_fields_present
+        # Pass through any other user-supplied supplemental columns as-is
+        # (e.g. age, gender); see sanitize_supplemental_value().
+        header += extra_fields_present
 
         # extra columns were selected from full WGS json
         extra_columns = []
@@ -529,8 +605,7 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
             cgmlst_id = extract_mlst_cgmlst_out.get('cgmlst_id')
             cgmlst_public_id = extract_mlst_cgmlst_out.get('cgmlst_public')
             mlst_public_id = extract_mlst_cgmlst_out.get('mlst_public')
-            hc5 = extract_mlst_cgmlst_out.get('hc5')
-            hc10 = extract_mlst_cgmlst_out.get('hc10')
+            hiercc_values = {level: extract_mlst_cgmlst_out.get(f'hc{level}') for level in HIERCC_LEVELS}
 
 
 
@@ -547,13 +622,17 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
                 "Serovar": serovar,
                 "MLST": mlst_id,
                 "cgMLST": cgmlst_id,
-                "HC5": hc5,
-                "HC10": hc10
             }
+            for level in HIERCC_LEVELS:
+                row[f"HC{level}"] = hiercc_values[level]
             # Include any supplemental metadata fields for this sample
             for field in optional_fields_present:
                 val = sup_data.get(sample_id, {}).get(field)
                 row[field] = "" if val is None else str(val)
+            # Extra free-form supplemental columns are already sanitized and
+            # default to "N/A" when missing for this sample.
+            for field in extra_fields_present:
+                row[field] = sup_data.get(sample_id, {}).get(field, "N/A")
 
             # Include extra fields if the flag is set
             if extra_fields:
@@ -639,6 +718,9 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
 
         # Add any optional metadata fields present in supplemental file
         header += optional_fields_present
+        # Pass through any other user-supplied supplemental columns as-is
+        # (e.g. age, gender); see sanitize_supplemental_value().
+        header += extra_fields_present
         extra_columns = []
         if extra_fields:
             # Resistance data (only for influenza)
@@ -770,6 +852,10 @@ def generate_metadata(output_dir, supplemental_file, id_column, output_prefix, e
             for field in optional_fields_present:
                 val = sup_data.get(sample_id, {}).get(field)
                 row[field] = "" if val is None else str(val)
+            # Extra free-form supplemental columns are already sanitized and
+            # default to "N/A" when missing for this sample.
+            for field in extra_fields_present:
+                row[field] = sup_data.get(sample_id, {}).get(field, "N/A")
 
             # Determine if sample should be dropped
             # Any field is Unknown or -1 (defualts for error when parsing json)
