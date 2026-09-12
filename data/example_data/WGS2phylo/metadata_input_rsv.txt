@@ -1,6 +1,6 @@
-id	date	region	country	division	city
-SRR27383080_pass	2000-01-02	Europe	Poland	-	Warsaw	
-SRR27383087_pass	2023-01-02	Europe	Poland	-	Warsaw
-SRR27383088_pass	2024-01-01	Europe	Germany	-	Berlin
-SRR27383089_pass	2000-01-02	Europe	Germany	-	Berlin
-SRR27383090_pass	2000-12-12	Europe	Germany	-	Munchen
+id	date	region	country	division	city	age	gender	sample_source
+SRR27383080_pass	2000-01-02	Europe	Poland	-	Warsaw	12	M	clinical
+SRR27383087_pass	2023-01-02	Europe	Poland	-	Warsaw	67	F	environmental
+SRR27383088_pass	2024-01-01	Europe	Germany	-	Berlin		M	clinical
+SRR27383089_pass	2000-01-02	Europe	Germany	-	Berlin	39	F	clinical
+SRR27383090_pass	2000-12-12	Europe	Germany	-	Munchen	51	M	environmental
