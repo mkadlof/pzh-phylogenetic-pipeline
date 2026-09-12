@@ -156,7 +156,7 @@ The metadata file must be a tab-separated file with the following required colum
 - `city` – City name (e.g., `Paris`)
 - `type` – Additional classification column representing suptype for Influenza (e.g `H1N1` )or type for for RSV (e.g. `A`). For SARS-CoV-2 can be identical with `virus` column
 
-Other columns are optional and can be used for additional metadata.
+Other columns are optional and can be used for additional metadata. All columns in metadata file are shipped to microreact project and shown in a default view.
 
 To ensure homogeneity of input data, the pipeline applies **safeguards**.  
 The default safeguard level is **`type`**, meaning that all samples in one run must share the same `type` value.
@@ -255,6 +255,7 @@ The pipeline includes strict safeguards to ensure homogeneity of input data. The
 - The column selected by `--map_detail` (`city` by default, or `country`) is missing or contains empty values. Empty join keys duplicate rows when metadata is merged with coordinates.
 - The `date` column contains a value that is not `YYYY-MM-DD`, or every sample shares the exact same date and `--clockrate` was not provided. TimeTree cannot estimate a clock rate without variation in sampling dates; either add samples from another date or pass `--clockrate` explicitly.
 
+All columns in metadata file are shipped to microreact project and shown in a default view.
 ---
 
 ## Input File Naming
@@ -275,6 +276,17 @@ For a file named `ERRXYZ.fasta`, the corresponding `strain` value in the metadat
 A helper script to prepare metadata file based on the results of our [Sequnecing pipline](https://github.com/mkadlof/plepiseq-wgs-pipeline). 
 With `--with-fasta` a phylogenetic pipeline-ready fasta input can also be prepared. The generated FASTA files and metadata are directly compatible with the viral and bacterial phylogenetic pipelines described above.
 Use `--without-fasta` to skip fasta file processing.
+
+### HierCC clustering columns (bacterial organisms)
+
+In normal mode (i.e. without `--extra-fields`), the bacterial branch now also emits `HC0`, `HC2`, `HC5`, `HC10` and `HC20` — the cgMLST HierCC clustering group ID at each of those levels (`hiercc_clustering_internal_data`). Not every organism/scheme reports every level (e.g. Campylobacter has no `HC0`/`HC2`/`HC20`); a missing level is written as `Unknown`, same as the rest of this script's "not available" fields.
+
+### `--supplemental-file` columns
+
+- `date`, `region`, `country`, `division`, `city` are required by the phylogenetic pipeline itself (see safeguards above), so they are always looked up case-insensitively and kept even when empty.
+- Any other column in the supplemental file (e.g. `age`, `gender`) is passed through to `metadata.tsv` as-is, under its original header text, since it is not used anywhere except being embedded as an opaque blob in the Microreact project. Missing/empty values in these extra columns are written as `N/A`.
+- Column names matching a field the pipeline itself computes (`strain`, `virus`, `type`, `Serovar`, `MLST`, `cgMLST`, `HC5`, `HC10`) or the `--id-column` are ignored to avoid overwriting pipeline-computed values.
+- Extra column values are sanitized before being written: embedded tabs/newlines are collapsed to a space (so a stray character can't shift every column after it), and values starting with `=`, `+`, `-` or `@` are prefixed with `'` to defuse spreadsheet "formula injection" for anyone who later opens the TSV in Excel/LibreOffice/Google Sheets.
 
 ## Example data 
 - [WGS output for bacterial](data/example_data/WGS2phylo/)

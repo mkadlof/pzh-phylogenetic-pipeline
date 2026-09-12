@@ -1,11 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.3.0] - 2026-09-12
+## [1.3.0] 2026-09-12
 ### Added
+- `WGS2Phylo.py` now passes all columns from a file specified via`--supplemental-file`  (e.g. `age`, `gender`) into `metadata.tsv` as-is, filling empty values with `N/A` and sanitizing values against TSV corruption and spreadsheet formula injection.
+- `WGS2Phylo.py` emits `HC0`, `HC2`, `HC5`, `HC10`, `HC20` HierCC clustering columns for bacterial organisms in normal mode; a level missing for a given organism/scheme is written as `Unknown`.
 - Validate the `date` metadata column in both wrappers: reject values that are not `YYYY-MM-DD`, and reject runs where every sample shares the same date unless `--clockrate` is provided.
 - Add `-with-trace` option to nextflow execution
 ### Fixed
+- `tests/WGS2Phylo` imported a stale duplicate copy of `WGS2Phylo.py` instead of `bin/WGS2Phylo.py`; it now imports from `bin/` directly, like the MST tests already do.
+- The Microreact project's metadata table only showed the columns hardcoded in the `.microreact` template, hiding any column not on that list (e.g. `age`/`gender`, extra HierCC levels) and, for viral projects, showing dead bacterial-only columns while hiding `virus`/`type`. `prepare_json_for_microreact.py` now rebuilds the table's column list from the actual metadata file for every run.
+- `tests/MST_bacteria` used a second, separately-maintained copy of the `.microreact` template (`data/microreact_config_bacteria.microreact`); it now points at the same `config/microreact_config_bacteria.microreact` used in production.
 - `raxml-ng` and `iqtree2` auto-detect a safe thread/worker count instead of always using every allocated CPU.
 
 ## [1.2.0] - 2026-08-08
