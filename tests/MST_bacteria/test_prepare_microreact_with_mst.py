@@ -5,7 +5,7 @@ from pathlib import Path
 from click.testing import CliRunner
 
 REPO_ROOT = Path(__file__).parents[2]
-TEMPLATE_PATH = REPO_ROOT / "data" / "microreact_config_bacteria.microreact"
+TEMPLATE_PATH = REPO_ROOT / "config" / "microreact_config_bacteria.microreact"
 sys.path.insert(0, str(REPO_ROOT / "bin"))
 
 import prepare_json_for_microreact as MODULE
@@ -98,3 +98,15 @@ def test_viral_layout_keeps_two_tabs_in_one_pane(tmp_path):
     assert [tab["id"] for tab in tabset["children"]] == ["tree-1", "tree-2"]
     assert tabset["selected"] < len(tabset["children"])
     assert all(tabset["children"] for tabset in tabsets(project["panes"]["model"]["layout"]))
+
+
+def test_table_columns_are_rebuilt_from_metadata_header(tmp_path):
+    # The metadata fixture used by run_generator() only has "strain" and
+    # "cgMLST" -- neither matches the template's hardcoded column list, so
+    # this proves the table columns come from the metadata file, not from
+    # whatever the template happened to ship with.
+    project = run_generator(tmp_path, include_mst=True)
+
+    for table in project["tables"].values():
+        assert [c["field"] for c in table["columns"]] == ["strain", "cgMLST"]
+        assert all(c["fixed"] is False for c in table["columns"])

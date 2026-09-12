@@ -96,7 +96,6 @@ COPY config/* /opt/docker/config/
 # Viral scripts/config
 COPY bin/* /opt/scripts/
 COPY data/auspice_config.json /etc/auspice/auspice_config.json
-COPY data/microreact_config_bacteria.microreact /opt/docker/config/microreact_config_bacteria.microreact
 COPY VERSION /opt/docker/
 
 CMD ["/bin/bash"]

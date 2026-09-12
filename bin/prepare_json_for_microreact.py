@@ -20,6 +20,28 @@ def text_file_to_base64(file_path: str) -> str:
     return encoded
 
 
+def read_metadata_columns(metadata_path: str) -> list:
+    """
+    Read the column names of the (tab-separated) metadata file, in file order.
+
+    The template project's table only shows the columns listed in
+    tables.table-1.columns, so this list must be rebuilt from the metadata
+    file actually produced for this run rather than hardcoded: metadata
+    columns vary by organism (viral vs bacterial), by which HierCC levels a
+    given cgMLST scheme reports, and by whatever extra columns the user put
+    in WGS2Phylo's --supplemental-file (e.g. age, gender). Any column not in
+    this list is otherwise hidden by default in the Microreact table pane.
+
+    :param metadata_path: Path to the tab-separated metadata file.
+    :return: Column names in file order.
+    """
+    with open(metadata_path, "r", newline="") as f:
+        header_line = f.readline().rstrip("\r\n")
+    if not header_line:
+        return []
+    return header_line.split("\t")
+
+
 def remove_tree_panel(project: dict, tree_id: str) -> None:
     """Remove a tree and its pane (or tab) from a template project."""
     project.get('trees', {}).pop(tree_id, None)
@@ -79,6 +101,13 @@ def main(input_json, classical_tree, rescaled_tree, mst_tree, metadata, project_
 
     default_project['meta']['name'] = project_name
     default_project['meta']['timestamp'] = timestamp
+
+    # Rebuild the metadata table's column list from the actual metadata file
+    # instead of relying on the template's hardcoded list, so every column
+    # that is actually in this run's metadata is visible by default (and
+    # nothing else stale is displayed as a dead/empty column).
+    for table in default_project.get('tables', {}).values():
+        table['columns'] = [{"field": field, "fixed": False} for field in read_metadata_columns(metadata)]
 
     #  dump json into a file
     with open(output, 'w') as f:
