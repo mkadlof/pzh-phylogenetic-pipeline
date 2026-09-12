@@ -1,5 +1,9 @@
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parents[2] / "bin"))
+
 from WGS2Phylo import get_fastqc_stats, get_contaminations_bacteria,  \
     get_sequencing_summary_bacteria, \
     get_amr_bacteria, \
@@ -88,8 +92,11 @@ GOLDENS = {
                                   'mlst_public' : "828",
                                   'cgmlst_id' : "local_41",
                                   'cgmlst_public' : "23885",
+                                  'hc0': "Unknown",
+                                  'hc2': "Unknown",
                                   'hc5': "local_41",
                                   'hc10' : "local_41",
+                                  'hc20': "Unknown",
                                   "reasons" : []}
     },
     'campylo_nanopore.json': {
@@ -159,8 +166,11 @@ GOLDENS = {
                                   'mlst_public' : "7125",
                                   'cgmlst_id' : "local_47",
                                   'cgmlst_public' : "44900",
+                                  'hc0': "Unknown",
+                                  'hc2': "Unknown",
                                   'hc5': "local_47",
                                   'hc10' : "local_47",
+                                  'hc20': "Unknown",
                                   "reasons" : []}
     },
     'ecoli_illumina.json': {
@@ -238,8 +248,11 @@ GOLDENS = {
                                   'mlst_public' : "678",
                                   'cgmlst_id' : "231697",
                                   'cgmlst_public' : "231697",
+                                  'hc0': "231697",
+                                  'hc2': "231697",
                                   'hc5': "231697",
                                   'hc10' : "231697",
+                                  'hc20': "1645",
                                   "reasons" : []}
     },
     'ecoli_nanopore.json': {
@@ -309,8 +322,11 @@ GOLDENS = {
                                   'mlst_public' : "678",
                                   'cgmlst_id' : "local_22",
                                   'cgmlst_public' : "231697",
+                                  'hc0': "local_22",
+                                  'hc2': "231697",
                                   'hc5': "231697",
                                   'hc10' : "231697",
+                                  'hc20': "1645",
                                   "reasons" : []}
     },
     'salmonella_illumina.json': {
@@ -388,8 +404,11 @@ GOLDENS = {
                                   'mlst_public' : "34",
                                   'cgmlst_id' : "local_241",
                                   'cgmlst_public' : "337784",
+                                  'hc0': "local_241",
+                                  'hc2': "337784",
                                   'hc5': "337784",
                                   'hc10' : "2",
+                                  'hc20': "2",
                                   "reasons" : []}
     },
     'salmonella_nanopore.json': {
@@ -459,8 +478,11 @@ GOLDENS = {
                                   'mlst_public' : "Unknown",
                                   'cgmlst_id' : "Unknown",
                                   'cgmlst_public' : "Unknown",
+                                  'hc0': "Unknown",
+                                  'hc2': "Unknown",
                                   'hc5': "Unknown",
                                   'hc10' : "Unknown",
+                                  'hc20': "Unknown",
                                   "reasons" : ['This module was eneterd with failed QC and poduced no valid output', 'This module was eneterd with failed QC and poduced no valid output']}
 
     },
